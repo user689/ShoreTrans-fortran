@@ -6,11 +6,15 @@
 
 module st_initialization
 
+#ifndef STANDALONE
+    use constants
+    use SharedVariables
+#endif
     use st_defaults
     use st_helper
     implicit none
 
-    public :: setup
+    public :: setup_shoretrans
 
     private
 
@@ -20,9 +24,7 @@ module st_initialization
     !> subroutine to set the initial values of variables \n
     !> checks if some variables are not initialized and sets them to default values
     !> also reads the cross shore profile
-    subroutine setup
-
-        use st_error_checking
+    subroutine setup_shoretrans
 
         implicit none
 
@@ -32,22 +34,23 @@ module st_initialization
         call check_errors()
 
         ! verbose output
-        if (verbose .le. -1) then
+        if (verbose .EQ. -1) then
             ! delete the log file
             call logger(-10, 'Deleting log file') ! delete log file
         end if
         call logger(3, 'logging level set to ' // &
                     num2str(verbose))
 
-        call read_xshore() ! read the cross shore profile
+        if(xshorefilename.NE.nans) call read_xshore() ! read the cross shore profile
 
         allocate(tmp_array(n_pts))
 
         ! defaults for the toe/crest values
         ! if not set, then the default values are the
         ! maximum of the profile
-        if (eql(toe_crest, nanr) .and.     &
-            (toe_crest_index == nani)) then
+
+        if (toe_crest.EQ.nanr .and.     &
+            (toe_crest_index.EQ.nani)) then
             toe_crest = maxval(z)
             toe_crest_index =  maxloc(z, 1)
             call logger(1, 'none of the toe/crest values were set, '// &
@@ -59,7 +62,8 @@ module st_initialization
 
         ! ! if only one option is not set,
         ! then use it to set the other option
-        if (toe_crest_index==nani) then
+        print *, toe_crest
+        if (toe_crest_index.EQ.nani) then
             tmp_array = 1
             where(z .ge. toe_crest) tmp_array = 0
             toe_crest_index = minloc(tmp_array, 1, back=.true.)
@@ -80,7 +84,7 @@ module st_initialization
         end if
 
         ! Depth of closure (1 and 2)
-        ! setup dc_index (upper depth of closure)
+        ! set up dc_index (upper depth of closure)
         if (eql(dc , nanr)) then
             dc = - 10.d0
             call logger(1, 'Depth of closure not set, using dc=: ' &
@@ -120,7 +124,7 @@ module st_initialization
                    adj(num2str(slump%switch)) // ' with slope: ' // &
                    adj(num2str(slump%slope)) // ' and cap: ' // &
                    adj(num2str(slump%cap)))
-    end subroutine setup
+    end subroutine setup_shoretrans
 
     subroutine read_xshore()
         implicit none
@@ -211,5 +215,24 @@ module st_initialization
             end if
         end if
     end subroutine read_xshore
+
+    subroutine check_errors
+        ! check for switches (should be 0 or 1)
+            call assert(rock .eq. 0 .or. rock .eq. 1, &
+                        "rock must be 0 or 1", 0) ! rock switch
+            call assert((slump%switch .eq. 0) .or. (slump%switch .eq. 1), &
+                'slump must be 0 or 1', 0) ! slump switch
+
+            ! slumping parameters
+            if (slump%switch .eq. 1) then
+                ! check if slope is between -180 and 180
+                call assert(slump%slope.ge.-180 .and. slump%slope .le. 180,&
+                        'dune slope must be between -180 and 180', 0)
+                ! check if slump cap is positive
+                call assert(slump%cap.ge.0,'slump cap set to a negative' //&
+                                            ' value') !only warning
+            end if
+
+        end subroutine check_errors
 
 end module st_initialization
