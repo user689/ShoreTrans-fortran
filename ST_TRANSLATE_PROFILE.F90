@@ -3,9 +3,11 @@
 !! the profile and calculate the error of the translation \n
 !! only main loop is used outside of this module.
 module st_translate_profile
-#ifdef STANDALONE
-    use st_defaults
+#ifndef STANDALONE
+    use constants
+    use SharedVariables
 #endif
+    use st_defaults
     use st_helper
     use st_slump, only: slump_profile
 
@@ -28,10 +30,10 @@ module st_translate_profile
     subroutine main_loop()
         implicit none
         integer :: xm, x_upp, x_low, xi_est, xi_prev, xi
-        real :: dv_m, dv_upp, dv_low, dv_est, x_curr
+        real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr
         character(len=charlen) :: msg
         integer :: i
-        real :: f_sq
+        real(kind=8) :: f_sq
 
         allocate(z_final(n_pts)) ! allocate space for the final profile
         ! upper and lower bounds
@@ -42,16 +44,16 @@ module st_translate_profile
         call get_profile(z_final, x_low)
         dv_low = dv
         xi_est = bruun_estimate() ! bruun estimate
-        if (sign(1., dv_upp * dv_low) .lt. 0.) then
+        if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I | xlow | xupp | xest |    ' //&
                           'dvlow |    dvupp |    dv')
             do i=1,max_iter
-                xm = nint(0.5 * (x_upp + x_low)) ! update estimate
+                xm = nint(0.5d0 * (x_upp + x_low)) ! update estimate
                 if (i == 1) xm =xi_est  ! better initial guess
                 call get_profile(z_final, xm)
                 dv_m = dv ! get the function value at the new estimate
                 f_sq = sqrt(dv_m * dv_m - (dv_upp * dv_low))
-                if (eql(f_sq, 0.)) then
+                if (eql(f_sq, 0.d0)) then
                     xi_est = xm
                     dv_est = dv_m
                     exit ! converged to exact minimum
@@ -72,7 +74,7 @@ module st_translate_profile
                 call logger(3, adj(msg))
 
                 ! convergence checks
-                if (eql(abs(dv_est), 0.)) then
+                if (eql(abs(dv_est), 0.d0)) then
                     exit ! converged to minimum
                 else if (abs(x_low - x_upp) .lt. 2) then
                     if(abs(dv_low) .gt. abs(dv_upp)) then
@@ -84,15 +86,15 @@ module st_translate_profile
                 end if
 
                 ! update the bounds
-                if (sign(1., dv_m * dv_est) .lt. 0) then
+                if (sign(1.d0, dv_m * dv_est) .lt. 0) then
                     x_low = xm
                     dv_low = dv_m
                     x_upp = xi_est
                     dv_upp = dv_est
-                else if (sign(1., dv_low * dv_est) .lt. 0) then
+                else if (sign(1.d0, dv_low * dv_est) .lt. 0) then
                     x_upp = xi_est
                     dv_upp = dv_est
-                else if (sign(1., dv_upp * dv_est) .lt. 0) then
+                else if (sign(1.d0, dv_upp * dv_est) .lt. 0) then
                     x_low = xi_est
                     dv_low = dv_est
                 else
@@ -105,11 +107,11 @@ module st_translate_profile
                 call logger(1, 'Maximum number of iterations reached')
                 call logger(1, 'Solution may not be the real minimum')
             end if
-        else if (eql(abs(dv_upp), 0.)) then
+        else if (eql(abs(dv_upp), 0.d0)) then
             ! get upper bound
             xi_est = x_upp
             dv_est = dv_upp
-        else if (eql(abs(dv_low), 0.)) then
+        else if (eql(abs(dv_low), 0.d0)) then
             ! get lower bound
             xi_est = x_low
             dv_est = dv_low
@@ -122,16 +124,6 @@ module st_translate_profile
         call get_profile(z_final, xi)
         call logger(2, 'Final xi: ' // adj(num2str(xi * dx)))
         call logger(2, 'Final dv: ' // adj(num2str(dv)))
-
-        ! save the profile in the output file
-        call logger(2, 'saving final profile to: '//adj(dir_name)// &
-                                                 '/z_final.out')
-        ! todo: write a check for output variables
-        call write_to('z_final.out', x, z_final)
-        call write_to('initial_profile.out', x, z)
-        deallocate(z_final)
-        deallocate(x)
-        deallocate(z)
     end subroutine main_loop
 
 
@@ -144,7 +136,7 @@ module st_translate_profile
     !! @return the estimate of the shoreline recession/progression
     function bruun_estimate() result(xi_est)
         integer :: xi_est
-        real :: x_est
+        real(kind=8) :: x_est
         h = toe_crest - dc
         w = x(dc_index) - x(toe_crest_index)
         ! xi is the one calculate from bruun rule
@@ -175,7 +167,7 @@ module st_translate_profile
     !! @return the smoothed profile
     subroutine smooth_profile(z_out, xi_tmp)
         integer, intent(in) :: xi_tmp
-        real, allocatable, intent(inout) :: z_out(:)
+        real(kind=8), allocatable, intent(inout) :: z_out(:)
         integer :: st_min, start_ind, end_ind ! smoothing profile
         ! smoothing the profile
         if (xi_tmp .le. 0) then
@@ -200,7 +192,7 @@ module st_translate_profile
     !! also maintains the crest of the profile in case the profile
     !! is marching offshore
     subroutine reset_elevation(z_tmp, xi_tmp)
-        real, allocatable, intent(inout) :: z_tmp(:)
+        real(kind=8), allocatable, intent(inout) :: z_tmp(:)
         integer, intent(in) :: xi_tmp ! current xi value
         where(z_tmp .gt. z .and. x .le. x(toe_crest_index)) z_tmp = z
 
@@ -221,11 +213,11 @@ module st_translate_profile
     !! @return the translated profile
     subroutine get_profile(z1, xi_tmp)
         implicit none
-        real, allocatable, intent(out) :: z1(:) ! translated profile
+        real(kind=8), allocatable, intent(out) :: z1(:) ! translated profile
         integer, intent(in) :: xi_tmp ! index of current profile
         integer, dimension(:), allocatable :: active_ind ! active indices
         integer :: active_size, i ! active size and loop index
-        real :: v0, v1 ! volumes of current and translated profiles
+        real(kind=8) :: v0, v1 ! volumes of current and translated profiles
 
         active_size = dc_index - 1 - toe_crest_index - xi_tmp
         if (active_size .le. 0) then

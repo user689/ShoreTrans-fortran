@@ -10,9 +10,10 @@
 !! - misc functions \n
 
 module st_helper
-
+#ifndef STANDALONE
+    use Constants
+#endif
     use st_defaults
-
     interface num2str
     !> @brief convert a number to a string.
     !! handles both integer and real numbers
@@ -159,9 +160,9 @@ module st_helper
         implicit none
 
         character(len=*), intent(in) :: out_name
-        real, intent (in) :: arr(:)
-        real, intent(in), optional :: arr2_(:)
-        real, allocatable :: arr2(:)
+        real(kind=8), intent (in) :: arr(:)
+        real(kind=8), intent(in), optional :: arr2_(:)
+        real(kind=8), allocatable :: arr2(:)
         integer :: ios, i
         integer, parameter :: fid_write = 19
         character(charlen) :: out_name_tmp, iomsg
@@ -288,6 +289,7 @@ module st_helper
     !! if no directory name is provided, use the current directory \n
     !> @return directory name
     subroutine get_dirname()
+        implicit none
         integer :: num_args, err
 
         num_args = command_argument_count()
@@ -318,7 +320,7 @@ module st_helper
     !> @return true if a and b are equal, false otherwise
     function eql(a, b) result(t)
         implicit none
-        real, intent(in) :: a, b
+        real(kind=8), intent(in) :: a, b
         logical :: t
         if (abs(a-b) .lt. eps) then
             t = .true.
@@ -338,9 +340,9 @@ module st_helper
     !! @param[in] y1 y value of second point
     !! @return array of interpolated values (y_out: same size as x_in)
     function interp1(x0, x1, y0, y1, x_in) result(y_out)
-        real, intent(in) :: x0, x1, y0, y1
-        real, intent(in) ::  x_in(:)
-        real, allocatable :: y_out(:)
+        real(kind=8), intent(in) :: x0, x1, y0, y1
+        real(kind=8), intent(in) ::  x_in(:)
+        real(kind=8), allocatable :: y_out(:)
         allocate(y_out(size(x_in)))
         y_out = y0 + (x_in-x0)*(y1-y0)/(x1-x0) ! vectorized operation
     end function interp1
@@ -355,8 +357,8 @@ module st_helper
     !! @param[in] xval x value to locate
     !! @return ipos index of the element
     function locate(x_in, xval) result(ipos)
-        real, intent(in) :: x_in(:)
-        real, intent(in) :: xval
+        real(kind=8), intent(in) :: x_in(:)
+        real(kind=8), intent(in) :: xval
         integer :: ipos
         integer :: n, ju,jl, jm ! indices
         logical :: ascnd ! ascending order
@@ -399,8 +401,8 @@ module st_helper
     !! @param[in] y1 array of y values
     !! @param[out] y2 interpolated values
     function interp1_vec(x1, x2, y1) result(y2)
-        real, intent(in) :: x1(:), x2(:), y1(:)
-        real, allocatable :: y2(:)
+        real(kind=8), intent(in) :: x1(:), x2(:), y1(:)
+        real(kind=8), allocatable :: y2(:)
         integer :: ipos, n2, n1, i
 
 
@@ -430,9 +432,9 @@ module st_helper
     !! @param[in] y_in array of y values
     !! @return z_out trapezoidal integration of y_in
     function trapz(x_in,y_in) result(z_out)
-        real, intent(in) :: x_in(:), y_in(:)
+        real(kind=8), intent(in) :: x_in(:), y_in(:)
         integer :: n
-        real :: z_out
+        real(kind=8):: z_out
         n = size(x_in)
         z_out = 0.5*dx*(y_in(1)+y_in(n) + 2.*sum(y_in(2:n-1)))
     end function trapz
@@ -493,7 +495,7 @@ module st_helper
     !! @param[in] number real to convert
     !! @return number as string
     function num2str_real(number)
-        real, intent(in)    :: number
+        real(kind=8), intent(in)    :: number
         character(len=25)   :: num2str_real, tmp
         write(tmp,'(F25.8)') number
         num2str_real = tmp
@@ -506,10 +508,10 @@ module st_helper
     function get_time() result(t)
         implicit none
         integer :: count
-        real :: count_rate, t
+        real(kind=8) :: count_rate, t
 
         call system_clock(count, count_rate)
-        t = count * 1./count_rate
+        t = count * 1.d0/count_rate
     end function get_time
 
         !> @brief assert that a condition is true

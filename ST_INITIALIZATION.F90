@@ -73,7 +73,7 @@ module st_initialization
 
         ! sea level rise (default is 1.0)
         if (eql(ds, nanr)) then
-            ds = 1.0
+            ds = 1.d0
             call logger(1, 'sea level rise not set, using' // &
                            ' default value: ' // &
                             adj(num2str(ds)))
@@ -82,7 +82,7 @@ module st_initialization
         ! Depth of closure (1 and 2)
         ! setup dc_index (upper depth of closure)
         if (eql(dc , nanr)) then
-            dc = - 10.
+            dc = - 10.d0
             call logger(1, 'Depth of closure not set, using dc=: ' &
                        // adj(num2str(dc)))
         else
@@ -96,7 +96,7 @@ module st_initialization
                    adj(num2str(dc_index)))
 
         if (eql(dc2 , nanr)) then
-            dc2 = dc - 0.1
+            dc2 = dc - 0.1d0
             call logger(1, 'Depth of closure 2 not set, using dc2= ' &
                        // adj(num2str(dc2)))
         else
@@ -110,7 +110,7 @@ module st_initialization
                    adj(num2str(dc2_index)))
 
         ! sediment flux (volume), default is 0.0
-        if (.not. eql(dv_input, 0.0)) then ! volume change
+        if (.not. eql(dv_input, 0.d0)) then ! volume change
             call logger(3, 'Sediment (budget/deficit) = ' // &
                        adj(num2str(dv_input)))
         end if
@@ -127,8 +127,8 @@ module st_initialization
 
         integer :: n_tmp, ios, i
         character(charlen) :: line
-        real :: dx_tmp
-        real, allocatable :: x_tmp(:), z_tmp(:), rock_tmp(:)
+        real(kind=8):: dx_tmp
+        real(kind=8), allocatable :: x_tmp(:), z_tmp(:), rock_tmp(:)
 
     ! read cross-shore profile
     !> cross-shore filename
@@ -205,7 +205,7 @@ module st_initialization
             ! interpolate new profile
             z = interp1_vec(x_tmp, x, z_tmp)
             if (rock .ne. 1) then
-                z_rock = z - 100.
+                z_rock = z - 100.d0
             else
                 z_rock = interp1_vec(x_tmp, x, rock_tmp)
             end if

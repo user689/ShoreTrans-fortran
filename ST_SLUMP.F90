@@ -3,9 +3,11 @@
 !! erodes part of the cliff/dune to avoid vertical sand cliff \n
 !! can be turned off by setting slump to 0
 module st_slump
-#ifdef STANDALONE
-    use st_defaults
+#ifndef STANDALONE
+    use Constants
+    use SharedVariables
 #endif
+    use st_defaults
     use st_helper
 
     implicit none
@@ -22,14 +24,14 @@ module st_slump
     !! @param[in] slope slope of the profile to slump to
     !! @return the slumped profile
     subroutine slump_profile(z_temp)
-        real, dimension(:), intent(inout) :: z_temp
-        real, allocatable, dimension(:) :: dune_angles(:), &
+        real(kind=8), dimension(:), intent(inout) :: z_temp
+        real(kind=8), allocatable, dimension(:) :: dune_angles(:), &
                                              dx1(:), dz1(:)
         integer, allocatable, dimension(:) :: dune_indices(:), &
                                                 dune_n(:)
         integer :: i, s, ind1, ind2
         integer :: pts, dune_offset
-        real :: dune_angle
+        real(kind=8) :: dune_angle
 
         if (slump%switch == 0) return ! no slumping
         s= size(z_temp)

@@ -1,0 +1,67 @@
+!> @brief
+!! default variables used by the whole program
+!> @details
+!! contains the default values for the variables used by the whole program
+!!
+!! created: 2022-02-18
+module st_defaults
+#ifndef STANDALONE
+    Use Constants
+    implicit none
+#else
+    implicit none
+    ! Constants
+    real(kind=8), parameter :: nanr = -999.0 !< not a number (real)
+    integer, parameter :: nani = -999 !< not a number (integer)
+    integer, parameter :: charlen = 256 !< default length of strings
+    integer, parameter :: fid = 18 ! id of files (read)
+    character(charlen) :: xshorefilename !< name of file containing x and z
+    ! options for cross-shore profile
+    ! Note: convention used is for z is positive
+    ! upwards (unlike lxshore)
+    real(kind=8) :: dc = nanr !< (upper) depth of closure (m)
+    real(kind=8) :: dc2 = nanr  !< (lower) depth of closure (m)
+    ! slump variables
+    type slump_type
+      integer :: switch  !< 0=no slump, 1=slump
+      real(kind=8) :: slope  !< dunes get eroded, this is the final slope
+      real(kind=8) :: cap   !< ignore slump above this depth.
+                    !! prevents slump for high cliffs
+    end type slump_type
+    type(slump_type) :: slump = slump_type(1, 30.d0, 100.d0) !< default values
+#endif
+    ! shoreline variables
+    integer :: n_pts !< number of points in shoreline (size of x,z arrays)
+    real(kind=8), allocatable, dimension(:) :: x(:), z(:) !< cross shore x and z
+    real(kind=8), allocatable, dimension(:) ::  z_final(:) !< final z values
+    !> general options
+    integer :: max_iter = 100 !< maximum number of iterations
+    real(kind=8) :: ds = nanr !< sea level rise (m)
+    real(kind=8), parameter :: eps = 1.d-6 !< convergence criterion
+    integer :: dc_index = nani !< index of dc
+    integer :: dc2_index = nani !< index of dc2
+    ! specify either a z-value or an index (1-based)
+    real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
+    integer :: toe_crest_index = nani !< index of toe_crest
+    ! internal variables
+    character(charlen) :: dir_name = '' !< directory of case to be run
+
+    !> verbosity level
+    !! 0 = only errors
+    !! 1 = errors and warnings
+    !! 2 = errors, warnings and info
+    !! 3 = errors, warnings, extra info
+    !! 4 = errors, warnings, extra info and debug
+    !! -1 = no output
+    integer :: verbose = -1
+
+    ! initial variables
+    real(kind=8) :: h  !< height of active profile
+    real(kind=8) :: w  !< width of active profile
+    real(kind=8) :: dx = nanr !< cross-shore step size
+    real(kind=8) :: dv !< volume difference between adjacent profiles
+    real(kind=8) :: dv_input = 0.d0 !< input volume change
+    ! options for rock layer
+    integer :: rock = 0 !< 0=no rock, 1=rock
+    real(kind=8), allocatable, dimension(:) :: z_rock(:) !< rock layer z-values
+end module st_defaults

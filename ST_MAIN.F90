@@ -2,17 +2,15 @@
 !! used to call all other functions
 !! @param arg - command line arguments (directory name)
 program shoretrans
-#ifdef STANDALONE
     use st_defaults
     use st_parameter_reading
     use st_initialization
     use st_helper
-#endif
     use st_translate_profile
 
 
     implicit none
-    real :: start_time, end_time
+    real(kind=8):: start_time, end_time
     character(len=charlen) :: msg
 
     start_time = get_time()
@@ -26,6 +24,13 @@ program shoretrans
 
     ! calculate the new profiles
     call main_loop()
+
+    ! save the profile in the output file
+    call logger(2, 'saving final profile to: '//adj(dir_name)// &
+                                             '/z_final.out')
+    ! todo: write a check for output variables
+    call write_to('z_final.out', x, z_final)
+    call write_to('initial_profile.out', x, z)
 
 
 
