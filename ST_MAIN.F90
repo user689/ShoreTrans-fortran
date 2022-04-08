@@ -20,7 +20,7 @@ program shoretrans
 
     call logger(-2, "Program start...")
     call read_parameters(dir_name)
-    call setup ! initial configurations (initialize)
+    call setup_shoretrans ! initial configurations (initialize)
 
     ! calculate the new profiles
     call main_loop()
