@@ -11,18 +11,16 @@ module st_defaults
 #else
     implicit none
     ! Constants
-    real(kind=8), parameter :: nanr = -999.0 !< not a number (real)
+    real(kind=8), parameter :: nanr = -999.d0 !< not a number (real)
     integer, parameter :: nani = -999 !< not a number (integer)
     integer, parameter :: charlen = 256 !< default length of strings
-    integer, parameter :: fid = 18 ! id of files (read)
-    character(charlen) :: xshorefilename !< name of file containing x and z
+    character(charlen), parameter :: nans = 'Undefined'
     ! options for cross-shore profile
     ! Note: convention used is for z is positive
     ! upwards (unlike lxshore)
     real(kind=8) :: dc = nanr !< (upper) depth of closure (m)
     real(kind=8) :: dc2 = nanr  !< (lower) depth of closure (m)
     ! specify either a z-value or an index (1-based)
-    real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
     ! slump variables
     type slump_type
       integer :: switch  !< 0=no slump, 1=slump
@@ -36,16 +34,18 @@ module st_defaults
     integer :: n_pts !< number of points in shoreline (size of x,z arrays)
     real(kind=8), allocatable, dimension(:) :: x(:), z(:) !< cross shore x and z
     real(kind=8), allocatable, dimension(:) ::  z_final(:) !< final z values
+    integer, parameter :: fid = 18 ! id of files (read)
     !> general options
     integer :: max_iter = 100 !< maximum number of iterations
     real(kind=8) :: ds = nanr !< sea level rise (m)
     real(kind=8), parameter :: eps = 1.d-6 !< convergence criterion
+    real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
     integer :: dc_index = nani !< index of dc
     integer :: dc2_index = nani !< index of dc2
     integer :: toe_crest_index = nani !< index of toe_crest
     ! internal variables
     character(charlen) :: dir_name = '' !< directory of case to be run
-
+    character(charlen) :: xshorefilename = nans !< name of file containing x and z
     !> verbosity level
     !! 0 = only errors
     !! 1 = errors and warnings
