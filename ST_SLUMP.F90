@@ -60,11 +60,11 @@ module st_slump
             do while (dune_angle > slump%slope)
                 pts = pts + 1
                 dune_offset = ind1 - pts
-                if (dune_offset < 0) then
+                if (dune_offset .LE. 0) then
                     ! can't go back any further
                 call logger (1, 'Ran out of profile to slump dune '// &
                     'Try inccreasing the onshore length')
-                    dune_offset = dune_offset + 1
+                    dune_offset = 1
                     exit
                 end if
                 dune_angle = atan2d(z_temp(dune_offset) - z_temp(ind2),&
