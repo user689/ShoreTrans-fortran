@@ -53,10 +53,7 @@ module st_defaults
     !! 3 = errors, warnings, extra info
     !! 4 = errors, warnings, extra info and debug
     !! -1 = no output
-    integer :: verbose = -1
-#ifdef STANDALONE
-    verbose = 2
-#endif
+    integer :: verbose = 2
 
     ! initial variables
     real(kind=8) :: h  !< height of active profile
