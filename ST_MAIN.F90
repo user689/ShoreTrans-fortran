@@ -23,7 +23,7 @@ program shoretrans
     call setup_shoretrans ! initial configurations (initialize)
 
     ! calculate the new profiles
-    call main_loop()
+    call translate_profile()
 
     ! save the profile in the output file
     call logger(2, 'saving final profile to: '//adj(dir_name)// &

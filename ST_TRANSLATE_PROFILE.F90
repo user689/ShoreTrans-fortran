@@ -14,7 +14,7 @@ module st_translate_profile
 
     implicit none
 
-    public :: main_loop
+    public :: translate_profile
 
 
 
@@ -27,7 +27,7 @@ module st_translate_profile
     !! convergence should be reached in a max of O(sqrt(n)) steps. \n
     !! where n is the number of points in the profile \n
     !! @return the new profile
-    subroutine main_loop()
+    subroutine translate_profile()
         implicit none
         integer :: xm, x_upp, x_low, xi_est, xi_prev, xi
         real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr
@@ -124,7 +124,7 @@ module st_translate_profile
         call get_profile(z_final, xi)
         call logger(2, 'Final xi: ' // adj(num2str(xi * dx)))
         call logger(2, 'Final dv: ' // adj(num2str(dv)))
-    end subroutine main_loop
+    end subroutine translate_profile
 
 
     !> @brief Estimate the shoreline recession
