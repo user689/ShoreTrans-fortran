@@ -62,7 +62,6 @@ module st_initialization
 
         ! ! if only one option is not set,
         ! then use it to set the other option
-        print *, toe_crest
         if (toe_crest_index.EQ.nani) then
             tmp_array = 1
             where(z .ge. toe_crest) tmp_array = 0
