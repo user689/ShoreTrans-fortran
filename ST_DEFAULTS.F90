@@ -15,11 +15,6 @@ module st_defaults
     integer, parameter :: nani = -999 !< not a number (integer)
     integer, parameter :: charlen = 256 !< default length of strings
     character(charlen), parameter :: nans = 'Undefined'
-    ! options for cross-shore profile
-    ! Note: convention used is for z is positive
-    ! upwards (unlike lxshore)
-    real(kind=8) :: doc = nanr !< (upper) depth of closure (m)
-    real(kind=8) :: doc2 = nanr  !< (lower) depth of closure (m)
     ! specify either a z-value or an index (1-based)
     ! slump variables
     type slump_type
@@ -40,6 +35,11 @@ module st_defaults
     real(kind=8) :: ds = nanr !< sea level rise (m)
     real(kind=8), parameter :: eps = 1.d-6 !< convergence criterion
     real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
+    ! options for cross-shore profile
+    ! Note: convention used is for z is positive
+    ! upwards (unlike lxshore)
+    real(kind=8) :: doc = nanr !< (upper) depth of closure (m)
+    real(kind=8) :: doc2 = nanr  !< (lower) depth of closure (m)
     integer :: doc_index = nani !< index of dc
     integer :: doc2_index = nani !< index of dc2
     integer :: toe_crest_index = nani !< index of toe_crest
