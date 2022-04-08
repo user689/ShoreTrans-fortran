@@ -21,6 +21,8 @@ module st_defaults
     ! upwards (unlike lxshore)
     real(kind=8) :: dc = nanr !< (upper) depth of closure (m)
     real(kind=8) :: dc2 = nanr  !< (lower) depth of closure (m)
+    ! specify either a z-value or an index (1-based)
+    real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
     ! slump variables
     type slump_type
       integer :: switch  !< 0=no slump, 1=slump
@@ -40,8 +42,6 @@ module st_defaults
     real(kind=8), parameter :: eps = 1.d-6 !< convergence criterion
     integer :: dc_index = nani !< index of dc
     integer :: dc2_index = nani !< index of dc2
-    ! specify either a z-value or an index (1-based)
-    real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
     integer :: toe_crest_index = nani !< index of toe_crest
     ! internal variables
     character(charlen) :: dir_name = '' !< directory of case to be run
@@ -54,6 +54,9 @@ module st_defaults
     !! 4 = errors, warnings, extra info and debug
     !! -1 = no output
     integer :: verbose = -1
+#ifdef STANDALONE
+    verbose = 2
+#endif
 
     ! initial variables
     real(kind=8) :: h  !< height of active profile
