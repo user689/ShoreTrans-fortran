@@ -73,14 +73,14 @@ module st_parameter_reading
               ! filenames
           case ('xshorefilename')
           read (line, *, iostat=ios) xshorefilename
-          case ('dc')
-          read (line, *, iostat=ios) dc
-          case ('dc_index')
-          read (line, *, iostat=ios) dc_index
-          case ('dc2')
-          read (line, *, iostat=ios) dc2
-          case ('dc2_index')
-          read (line, *, iostat=ios) dc2_index
+          case ('doc')
+          read (line, *, iostat=ios) doc
+          case ('doc_index')
+          read (line, *, iostat=ios) doc_index
+          case ('doc2')
+          read (line, *, iostat=ios) doc2
+          case ('doc2_index')
+          read (line, *, iostat=ios) doc2_index
           case ('ds')
           read (line, *, iostat=ios) ds
           case ('toe_crest')

@@ -37,10 +37,10 @@ module st_translate_profile
 
         allocate(z_final(n_pts)) ! allocate space for the final profile
         ! upper and lower bounds
-        x_upp = n_pts - dc_index
+        x_upp = n_pts - doc_index
         call get_profile(z_final, x_upp)
         dv_upp = dv
-        x_low = max(1 - toe_crest_index, dc_index -1 - n_pts)
+        x_low = max(1 - toe_crest_index, doc_index -1 - n_pts)
         call get_profile(z_final, x_low)
         dv_low = dv
         xi_est = bruun_estimate() ! bruun estimate
@@ -137,8 +137,8 @@ module st_translate_profile
     function bruun_estimate() result(xi_est)
         integer :: xi_est
         real(kind=8) :: x_est
-        h = toe_crest - dc
-        w = x(dc_index) - x(toe_crest_index)
+        h = toe_crest - doc
+        w = x(doc_index) - x(toe_crest_index)
         ! xi is the one calculate from bruun rule
         ! plus any additional (sources/sinks)
         x_est = (-ds * w / h) + (dv_input / h)! calculate the estimate
@@ -172,12 +172,12 @@ module st_translate_profile
         ! smoothing the profile
         if (xi_tmp .le. 0) then
             st_min = nint(w * 0.1) ! minimum smoothing window
-            start_ind = min((dc_index -1 + xi_tmp), &
-                            (dc_index - st_min)) ! min smoothing window
-            end_ind = dc_index
+            start_ind = min((doc_index -1 + xi_tmp), &
+                            (doc_index - st_min)) ! min smoothing window
+            end_ind = doc_index
         else ! xi > 0
-            start_ind = dc_index - 1
-            end_ind = dc_index + xi_tmp
+            start_ind = doc_index - 1
+            end_ind = doc_index + xi_tmp
         end if
         z_out(start_ind+1:end_ind) =  interp1(x(start_ind), x(end_ind),&
                                     z_out(start_ind), z(end_ind), &
@@ -219,7 +219,7 @@ module st_translate_profile
         integer :: active_size, i ! active size and loop index
         real(kind=8) :: v0, v1 ! volumes of current and translated profiles
 
-        active_size = dc_index - 1 - toe_crest_index - xi_tmp
+        active_size = doc_index - 1 - toe_crest_index - xi_tmp
         if (active_size .le. 0) then
             call logger(0, 'get_profile: active_size <= 0'// &
                           'can not translate profile')
@@ -231,10 +231,10 @@ module st_translate_profile
 
         ! raise the profile by SLR
         z1 = z
-        z1(toe_crest_index:dc_index-1) = z1(toe_crest_index:dc_index-1)&
+        z1(toe_crest_index:doc_index-1) = z1(toe_crest_index:doc_index-1)&
                                          + ds
         ! active zone is the zone that is translated
-        active_ind = (/(i, i=(toe_crest_index+xi_tmp),(dc_index-1))/)
+        active_ind = (/(i, i=(toe_crest_index+xi_tmp),(doc_index-1))/)
         z1(active_ind) = z1(active_ind - xi_tmp) ! move profile to the right
         call reset_elevation(z1, xi_tmp) ! reset elevation at the end of the profile
         call smooth_profile(z1, xi_tmp) ! interpolate at the end of the profile
@@ -243,8 +243,8 @@ module st_translate_profile
             call slump_profile(z1)
         end if
         ! calculate volume difference
-        v0 = trapz(x(1:dc2_index), z(1:dc2_index) - dc2)
-        v1 = trapz(x(1:dc2_index), z1(1:dc2_index) - dc2)
+        v0 = trapz(x(1:doc2_index), z(1:doc2_index) - doc2)
+        v1 = trapz(x(1:doc2_index), z1(1:doc2_index) - doc2)
         dv = v1 - v0 - dv_input ! volume difference (error)
     end subroutine get_profile
 end module st_translate_profile

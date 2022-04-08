@@ -83,34 +83,34 @@ module st_initialization
         end if
 
         ! Depth of closure (1 and 2)
-        ! set up dc_index (upper depth of closure)
-        if (eql(dc , nanr)) then
-            dc = - 10.d0
-            call logger(1, 'Depth of closure not set, using dc=: ' &
-                       // adj(num2str(dc)))
+        ! set up doc_index (upper depth of closure)
+        if (eql(doc , nanr)) then
+            doc = - 10.d0
+            call logger(1, 'Depth of closure not set, using doc=: ' &
+                       // adj(num2str(doc)))
         else
             call logger(3, 'Depth of closure set to: ' // &
-                       adj(num2str(dc)))
+                       adj(num2str(doc)))
         end if
         tmp_array = 1
-        where(z .ge. dc) tmp_array = 0
-        dc_index = minloc(tmp_array, 1, back=.true.) + 1
+        where(z .ge. doc) tmp_array = 0
+        doc_index = minloc(tmp_array, 1, back=.true.) + 1
         call logger(3, 'Depth of closure index set to: ' // &
-                   adj(num2str(dc_index)))
+                   adj(num2str(doc_index)))
 
-        if (eql(dc2 , nanr)) then
-            dc2 = dc - 0.1d0
-            call logger(1, 'Depth of closure 2 not set, using dc2= ' &
-                       // adj(num2str(dc2)))
+        if (eql(doc2 , nanr)) then
+            doc2 = doc - 0.1d0
+            call logger(1, 'Depth of closure 2 not set, using doc2= ' &
+                       // adj(num2str(doc2)))
         else
             call logger(3, 'Depth of closure 2 set to: ' // &
-                       adj(num2str(dc2)))
+                       adj(num2str(doc2)))
         end if
         tmp_array = 1
-        where(z .ge. dc2) tmp_array = 0
-        dc2_index = minloc(tmp_array, 1, back=.true.) + 1
+        where(z .ge. doc2) tmp_array = 0
+        doc2_index = minloc(tmp_array, 1, back=.true.) + 1
         call logger(3, 'Depth of closure 2 index set to: ' // &
-                   adj(num2str(dc2_index)))
+                   adj(num2str(doc2_index)))
 
         ! sediment flux (volume), default is 0.0
         if (.not. eql(dv_input, 0.d0)) then ! volume change
