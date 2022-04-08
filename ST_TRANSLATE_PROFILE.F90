@@ -40,7 +40,7 @@ module st_translate_profile
         x_upp = n_pts - dc_index
         call get_profile(z_final, x_upp)
         dv_upp = dv
-        x_low = max(1 - toe_crest_index, Dc -1 - n_pts)
+        x_low = max(1 - toe_crest_index, dc_index -1 - n_pts)
         call get_profile(z_final, x_low)
         dv_low = dv
         xi_est = bruun_estimate() ! bruun estimate
