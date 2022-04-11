@@ -14,7 +14,9 @@ module st_defaults
     real(kind=8), parameter :: nanr = -999.d0 !< not a number (real)
     integer, parameter :: nani = -999 !< not a number (integer)
     integer, parameter :: charlen = 256 !< default length of strings
-    character(charlen), parameter :: nans = 'Undefined'
+    character(charlen), parameter :: nans = 'Undefined' !< undefined strings
+    ! temp variables for interpolation
+    real(kind=8), allocatable, dimension(:) :: x_tmp, z_tmp, rock_tmp
     ! specify either a z-value or an index (1-based)
     ! slump variables
     type slump_type

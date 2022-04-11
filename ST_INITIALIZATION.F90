@@ -42,7 +42,7 @@ module st_initialization
                     num2str(verbose))
 
         if(xshorefilename.NE.nans) call read_xshore() ! read the cross shore profile
-
+        call initialize_transect(x,z)
         allocate(tmp_array(n_pts))
 
         ! defaults for the toe/crest values
@@ -125,14 +125,40 @@ module st_initialization
                    adj(num2str(slump%cap)))
     end subroutine setup_shoretrans
 
+    subroutine initialize_transect(x,z)
+        real(kind=8), dimension(:), allocatable :: x, z
+        real(kind=8):: dx_tmp ! current dx
+        integer i
+        dx_tmp = x_tmp(2) - x_tmp(1) ! assume uniform spacing
+        ! check if we need to interpolate the cross-shore profile
+        if (dx.le.0) then ! dx not set
+            dx = dx_tmp
+            allocate(x(n_pts), z(n_pts), z_rock(n_pts))
+            x = x_tmp
+            z = z_tmp
+            z_rock = rock_tmp
+        else
+            ! dx should always be +ve
+            n_pts = int((x_tmp(n_pts) - x_tmp(1)) / dx) +1
+            allocate(x(n_pts), z(n_pts), z_rock(n_pts))
+            do i=1,n_pts
+                x(i) = x_tmp(1) + dx * (i-1)
+            end do
+            ! interpolate new profile
+            z = interp1_vec(x_tmp, x, z_tmp)
+            if (rock .ne. 1) then
+                z_rock = z - 100.d0
+            else
+                z_rock = interp1_vec(x_tmp, x, rock_tmp)
+            end if
+        end if
+        deallocate(x_tmp,z_tmp,rock_tmp)
+    end subroutine initialize_transect
+
     subroutine read_xshore()
         implicit none
-
         integer :: n_tmp, ios, i
         character(charlen) :: line
-        real(kind=8):: dx_tmp
-        real(kind=8), allocatable :: x_tmp(:), z_tmp(:), rock_tmp(:)
-
     ! read cross-shore profile
     !> cross-shore filename
         xshorefilename = adj(dir_name)  // '/inputs/' // xshorefilename
@@ -170,49 +196,7 @@ module st_initialization
             end do
         end if
         close(fid)
-        dx_tmp = x_tmp(2) - x_tmp(1) ! assume uniform spacing
-        ! check if we need to interpolate the cross-shore profile
-        if (eql(dx, nanr)) then ! dx not set
-            dx = dx_tmp
-            n_pts = n_tmp
-            allocate(x(n_pts), z(n_pts), z_rock(n_pts))
-            x = x_tmp
-            z = z_tmp
-            z_rock = rock_tmp
-        else ! dx was set
-            if (dx .lt. 0) then
-                n_pts = int(-(x_tmp(n_tmp) - x_tmp(1)) / dx) + 1
-                allocate(x(n_pts), z(n_pts), z_rock(n_pts))
-                call logger(3, 'Interpolating cross-shore profile ' // &
-                'from ' // &
-                adj(num2str(n_tmp)) // ' points to ' // &
-                adj(num2str(n_pts)) // ' points')
-                do i=1,n_pts
-                    x(i) = x_tmp(n_tmp) + dx * (i-1)
-                end do
-            else if (abs(dx) .lt. eps*eps) then
-                call logger(0, 'dx cannot be zero')
-                stop
-            else
-                ! new size of x
-                n_pts = int((x_tmp(n_tmp) - x_tmp(1)) / dx) +1
-                allocate(x(n_pts), z(n_pts), z_rock(n_pts))
-                call logger(3, 'Interpolating cross-shore profile ' // &
-                           'from ' // &
-                           adj(num2str(n_tmp)) // ' points to ' // &
-                           adj(num2str(n_pts)) // ' points')
-                do i=1,n_pts
-                    x(i) = x_tmp(1) + dx * (i-1)
-                end do
-            end if
-            ! interpolate new profile
-            z = interp1_vec(x_tmp, x, z_tmp)
-            if (rock .ne. 1) then
-                z_rock = z - 100.d0
-            else
-                z_rock = interp1_vec(x_tmp, x, rock_tmp)
-            end if
-        end if
+        n_pts = n_tmp
     end subroutine read_xshore
 
     subroutine check_errors
@@ -232,6 +216,6 @@ module st_initialization
                                         ' value') !only warning
         end if
 
-        end subroutine check_errors
+    end subroutine check_errors
 
 end module st_initialization
