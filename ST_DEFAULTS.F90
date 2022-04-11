@@ -15,6 +15,7 @@ module st_defaults
     integer, parameter :: nani = -999 !< not a number (integer)
     integer, parameter :: charlen = 256 !< default length of strings
     character(charlen), parameter :: nans = 'Undefined' !< undefined strings
+
     ! specify either a z-value or an index (1-based)
     ! slump variables
     type slump_type
@@ -28,8 +29,7 @@ module st_defaults
     ! shoreline variables
     integer :: n_pts !< number of points in shoreline (size of x,z arrays)
     real(kind=8), allocatable, dimension(:) :: x(:), z(:) !< cross shore x and z
-    ! temp variables for interpolation
-    real(kind=8), allocatable, dimension(:) :: x_tmp, z_tmp, rock_tmp
+
     real(kind=8), allocatable, dimension(:) ::  z_final(:) !< final z values
     integer, parameter :: fid = 18 ! id of files (read)
     !> general options
@@ -48,6 +48,8 @@ module st_defaults
     ! internal variables
     character(charlen) :: dir_name = '' !< directory of case to be run
     character(charlen) :: xshorefilename = nans !< name of file containing x and z
+    ! temp variables for interpolation
+    real(kind=8), allocatable, dimension(:) :: x_tmp, z_tmp, rock_tmp
     !> verbosity level
     !! 0 = only errors
     !! 1 = errors and warnings

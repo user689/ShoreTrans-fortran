@@ -15,7 +15,6 @@ module st_initialization
     implicit none
 
     public :: setup_shoretrans
-
     private
 
     contains
@@ -42,7 +41,7 @@ module st_initialization
                     num2str(verbose))
 
         if(xshorefilename.NE.nans) call read_xshore() ! read the cross shore profile
-        call initialize_transect(x,z)
+
         allocate(tmp_array(n_pts))
 
         ! defaults for the toe/crest values
@@ -197,6 +196,7 @@ module st_initialization
         end if
         close(fid)
         n_pts = n_tmp
+        call initialize_transect(x,z)
     end subroutine read_xshore
 
     subroutine check_errors
