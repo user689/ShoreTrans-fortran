@@ -239,9 +239,7 @@ module st_translate_profile
         call reset_elevation(z1, xi_tmp) ! reset elevation at the end of the profile
         call smooth_profile(z1, xi_tmp) ! interpolate at the end of the profile
         ! slump profile (erosion of dunes)
-        if (slump%switch == 1) then
-            call slump_profile(z1)
-        end if
+        call slump_profile(z1)
         ! calculate volume difference
         v0 = trapz(x(1:doc2_index), z(1:doc2_index) - doc2)
         v1 = trapz(x(1:doc2_index), z1(1:doc2_index) - doc2)
