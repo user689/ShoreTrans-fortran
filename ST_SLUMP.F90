@@ -29,7 +29,7 @@ module st_slump
                                              dx1(:), dz1(:)
         integer, allocatable, dimension(:) :: dune_indices(:), &
                                                 dune_n(:)
-        integer :: i, s, ind1, ind2
+        integer :: i, s, ind1, ind2, start_index
         integer :: pts, dune_offset
         real(kind=8) :: dune_angle
 
@@ -40,8 +40,8 @@ module st_slump
         allocate(dune_indices(s))
         ! find sand cliff location
         dx1 = dx
-        dx1(1) = 0.0
-        dz1 = 0.0
+        dx1(1) = 0.d0
+        dz1 = 0.d0
         dz1(2:s) = z_temp(1:s-1) - z_temp(2:s)
         dune_angles = atan2d(dz1,dx1) ! angles of dune
         dune_indices = 0
@@ -60,7 +60,7 @@ module st_slump
             do while (dune_angle > slump%slope)
                 pts = pts + 1
                 dune_offset = ind1 - pts
-                if (dune_offset .LE. 0) then
+                if (dune_offset .LT. 0) then
                     ! can't go back any further
                 call logger (1, 'Ran out of profile to slump dune '// &
                     'Try inccreasing the onshore length')
@@ -71,10 +71,13 @@ module st_slump
                                     x(ind2) - x(dune_offset))
             end do
             ! interpolate section of profile to be slopped
-            z_temp(dune_offset:ind2) = interp1(x(dune_offset), x(ind2),&
-                                                z_temp(dune_offset),&
+
+            start_index = ind1 - pts
+            !PRINT *, start_index
+            z_temp(start_index:ind2) = interp1(x(start_index), x(ind2),&
+                                                z_temp(start_index),&
                                                 z_temp(ind2), &
-                                                x(dune_offset:ind2))
+                                                x(start_index:ind2))
 
         end do
     end subroutine slump_profile
