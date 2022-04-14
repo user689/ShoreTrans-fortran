@@ -41,7 +41,7 @@ module st_initialization
                     num2str(verbose))
 
         if(xshorefilename.NE.nans) call read_xshore() ! read the cross shore profile
-
+        dx = X(2) - X(1)
         allocate(tmp_array(n_pts))
 
         ! defaults for the toe/crest values
