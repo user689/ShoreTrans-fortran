@@ -8,6 +8,7 @@ module st_defaults
 #ifndef STANDALONE
     Use Constants
     implicit none
+    logical :: standalone = .false. ! run from lxshore
 #else
     implicit none
     ! Constants
@@ -15,7 +16,7 @@ module st_defaults
     integer, parameter :: nani = -999 !< not a number (integer)
     integer, parameter :: charlen = 256 !< default length of strings
     character(charlen), parameter :: nans = 'Undefined' !< undefined strings
-
+    logical :: standalone = .true. ! standalone shoretrans
     ! specify either a z-value or an index (1-based)
     ! slump variables
     type slump_type
