@@ -13,8 +13,8 @@ module st_translate_profile
 
 
     implicit none
-
-    public :: translate_profile
+    INTEGER :: XI ! profile translation
+    public :: translate_profile, XI
 
 
 
@@ -29,7 +29,7 @@ module st_translate_profile
     !! @return the new profile
     subroutine translate_profile()
         implicit none
-        integer :: xm, x_upp, x_low, xi_est, xi_prev, xi
+        integer :: xm, x_upp, x_low, xi_est, xi_prev
         real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr
         character(len=charlen) :: msg
         integer :: i
@@ -45,7 +45,7 @@ module st_translate_profile
         dv_low = dv
         xi_est = bruun_estimate() ! bruun estimate
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
-            call logger(3,'I | xlow | xupp | xest |    ' //&
+            call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
                           'dvlow |    dvupp |    dv')
             do i=1,max_iter
                 xm = nint(0.5d0 * (x_upp + x_low)) ! update estimate
@@ -68,7 +68,7 @@ module st_translate_profile
                 call get_profile(z_final, xi_est) ! apply the new estimate
                 dv_est = dv
                 ! log the results
-                write (msg, '(I2,A,I4,A,I4,A,I4,A,F8.2,A,F8.2,A,F8.2)')&
+                write (msg, '(I2,A,I8,A,I8,A,I8,A,F8.2,A,F8.2,A,F8.2)')&
                 & i, ' | ', x_low, ' | ', x_upp, ' | ', xi_est, ' | ', &
                 & dv_low, ' | ', dv_upp, ' | ', dv_est
                 call logger(3, adj(msg))
@@ -123,7 +123,7 @@ module st_translate_profile
         xi = xi_est
         call get_profile(z_final, xi)
         call logger(2, 'Final xi: ' // adj(num2str(xi * dx)))
-        call logger(2, 'Final dv: ' // adj(num2str(dv)))
+        call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
 
 
