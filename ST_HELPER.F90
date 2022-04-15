@@ -404,10 +404,7 @@ module st_helper
         real(kind=8), intent(in) :: x1(:), x2(:), y1(:)
         real(kind=8), allocatable :: y2(:)
         integer :: ipos, n2, n1, i
-
-
         n2 = size(x2)
-
         n1 = size(x1)
         allocate(y2(n2))
         do i=1,n2-1
