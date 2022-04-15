@@ -122,7 +122,7 @@ module st_translate_profile
         end if
         xi = xi_est
         call get_profile(z_final, xi)
-        call logger(2, 'Final xi: ' // adj(num2str(xi * dx)))
+        call logger(2, 'Final xi: ' // adj(num2str(xi)))
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
 
@@ -142,7 +142,8 @@ module st_translate_profile
         ! xi is the one calculate from bruun rule
         ! plus any additional (sources/sinks)
         x_est = (-ds * w / h) + (dv_input / h)! calculate the estimate
-        xi_est = nint(x_est) ! round to nearest integer
+        print *, x_est
+        xi_est = nint(x_est / dx) ! round to nearest integer
         ! catch any xi values that are too large
         if (- xi_est .ge. toe_crest_index) then
             xi_est = 1 - toe_crest_index
