@@ -48,7 +48,7 @@ module st_initialization
         ! if not set, then the default values are the
         ! maximum of the profile
 
-        if (toe_crest.EQ.nanr .and.     &
+        if (eql(toe_crest , nanr) .and.     &
             (toe_crest_index.EQ.nani)) then
             toe_crest = maxval(z)
             toe_crest_index =  maxloc(z, 1)
