@@ -142,7 +142,6 @@ module st_translate_profile
         ! xi is the one calculate from bruun rule
         ! plus any additional (sources/sinks)
         x_est = (-ds * w / h) + (dv_input / h)! calculate the estimate
-        print *, x_est
         xi_est = nint(x_est / dx) ! round to nearest integer
         ! catch any xi values that are too large
         if (- xi_est .ge. toe_crest_index) then
