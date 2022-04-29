@@ -37,7 +37,7 @@ module st_translate_profile
 
         allocate(z_final(n_pts)) ! allocate space for the final profile
         ! upper and lower bounds
-        x_upp = n_pts - doc_index
+        x_upp = min(n_pts - doc_index, doc_index - 2 - toe_crest_index)
         call get_profile(z_final, x_upp)
         dv_upp = dv
         x_low = max(1 - toe_crest_index, doc_index -1 - n_pts)
@@ -222,7 +222,7 @@ module st_translate_profile
         active_size = doc_index - 1 - toe_crest_index - xi_tmp
         if (active_size .le. 0) then
             call logger(0, 'get_profile: active_size <= 0'// &
-                          'can not translate profile')
+                          ' can not translate profile')
             stop
         end if
 
