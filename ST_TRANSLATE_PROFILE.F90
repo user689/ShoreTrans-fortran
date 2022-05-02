@@ -87,10 +87,10 @@ module st_translate_profile
 
                 ! update the bounds
                 if (sign(1.d0, dv_m * dv_est) .lt. 0) then
-                    x_low = xm
-                    dv_low = dv_m
-                    x_upp = xi_est
-                    dv_upp = dv_est
+                    x_low = MIN(xm, xi_est)
+                    dv_low = MIN(dv_m, dv_est)
+                    x_upp = MAX(xm, xi_est)
+                    dv_upp = MAX(dv_m, dv_est)
                 else if (sign(1.d0, dv_low * dv_est) .lt. 0) then
                     x_upp = xi_est
                     dv_upp = dv_est
