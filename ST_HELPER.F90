@@ -238,6 +238,7 @@ module st_helper
             close(fid_log, status='delete') ! delete log file
         else if (priority .eq. -2) then ! overwrites log file
             ! initialize log file
+#ifdef STANDALONE
             open(unit=fid_log, file=adj(log_file_tmp), &
                  status='unknown', iostat=ios, iomsg=iomsg)
             if (ios /= 0) then
@@ -249,8 +250,10 @@ module st_helper
             write(fid_log, *) 'Log file created at: ', &
                                  date_str , ' ' , time_str
             write(fid_log, *)  msg
+#endif
         else
             if (verbose .lt. 0) return
+#ifdef STANDALONE
             open(unit=fid_log, file=trim(adjustl(log_file_tmp)), &
                  position='append', iostat=ios, iomsg=iomsg)
             if (ios /= 0) then
@@ -259,6 +262,7 @@ module st_helper
                 print *, '>>  ', iomsg
                 stop
             end if
+#endif
             !write(fid_log, '(A)', advance='no') time_str
             select case(priority)
                 case(0)
@@ -280,7 +284,9 @@ module st_helper
                     write(fid_log, *)  adj(msg)
             end select
         end if
+#ifdef STANDALONE
         close(fid_log)
+#endif
     end subroutine logger
 
     !> @brief get the directory name
