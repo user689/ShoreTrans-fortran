@@ -75,7 +75,7 @@ module st_initialization
 
         ! sea level rise (default is 1.0)
         if (eql(ds, nanr)) then
-            ds = 1.d0
+            ds = 0.d0
             call logger(1, 'sea level rise not set, using' // &
                            ' default value: ' // &
                             adj(num2str(ds)))
