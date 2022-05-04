@@ -99,7 +99,7 @@ module st_translate_profile
                     dv_low = dv_est
                 else
                     ! this should never happen
-                    call logger(0, 'Unkown error in main_loop')
+                    call logger(0, 'Unkown error in main_loop (ST_TRANSLATE_PROFILE)')
                 end if
                 xi_prev = xi_est ! update the previous estimate
             end do
@@ -153,7 +153,9 @@ module st_translate_profile
         call logger (3, 'ds = '//adj(num2str(ds)))
         call logger (3, 'h = '//adj(num2str(h)))
         call logger (3, 'w = '//adj(num2str(w)))
-        call logger (3, '(bruun) xi = '//adj(num2str(xi_est)))
+        call logger (-1, 'Initial estimate (bruun) xi = ' &
+        // adj(num2str(xi_est * dx)) // ' (m)(' // adj(num2str(xi_est)) &
+        // ')')
     end function bruun_estimate
 
     !> @brief smooth the profile at the base of the active
