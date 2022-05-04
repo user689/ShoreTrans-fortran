@@ -73,14 +73,6 @@ module st_initialization
                        adj(num2str(toe_crest)))
         end if
 
-        ! sea level rise (default is 1.0)
-        if (eql(ds, nanr)) then
-            ds = 1.d0
-            call logger(1, 'sea level rise not set, using' // &
-                           ' default value: ' // &
-                            adj(num2str(ds)))
-        end if
-
         ! Depth of closure (1 and 2)
         ! set up doc_index (upper depth of closure)
         if (eql(doc , nanr)) then

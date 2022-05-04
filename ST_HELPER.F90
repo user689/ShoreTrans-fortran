@@ -105,53 +105,6 @@ module st_helper
         end do
     end function to_lower
 
-    !> @brief read a file and store it in arr1 and arr2,
-    !! optionally in arr3
-    !! @param[in] filename name of the file to be read
-    !! @param[out] arr1 first array
-    !! @param[out] arr2 second array
-    !! @param[out] arr3 third array (optional)
-    !! @param[out] n number of lines read
-    ! subroutine read_file(filename, arr1, arr2, arr3, n)
-    ! end subroutine read_file
-    ! subroutine read_file(filename, arr1, arr2, n)
-    !     ! read file and store in arr1 (optionally in arr2)
-    !     ! input:
-    !     !   filename: name of file to be read
-    !     !   arr1: array to store first column of file
-    !     !   arr2: array to store second column of file (optional)
-    !     !   n: number of lines to be read (optional)
-    !     ! output:
-    !     !   arr1: array containing first column of file
-    !     !   arr2: array containing second column of file (optional)
-    !     !   n: number of lines read
-    !     !
-    !     implicit none
-    !     character(len=*), intent(in) :: filename
-    !     character(len=*), intent(inout) :: arr1
-    !     character(len=*), intent(inout), optional :: arr2
-    !     integer, intent(inout), optional :: n
-
-    !     character(len=charlen) :: fullname ! full name of file
-    !     character(len=charlen) :: line, iomsg ! line read from file
-    !     integer :: ios
-    !     fullname = adj(dir_name)// '/inputs/' // adj(filename)
-    !     call logger(3, 'Reading file: '//fullname)
-
-    !     open(unit=fid, file=fullname, status='old', &
-    !          iostat=ios, iomsg=iomsg)
-    !     if (ios .ne. 0) then
-    !         call logger(0, 'could not open file: '//adj(fullname))
-    !         call logger(0, adj(iomsg))
-    !         close(fid)
-    !         stop
-    !     end if
-    !     do while(ios .eq. 0)
-    !         ! TODO: check for end of file
-    !         ! TODo: complete this
-    !     end do
-    ! end subroutine read_file
-
     !> @brief write an array to a file
     !> @param[in] out_name name of file to be written to
     !> @param[in] arr array to be written

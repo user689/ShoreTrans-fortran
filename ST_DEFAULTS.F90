@@ -35,7 +35,7 @@ module st_defaults
     integer, parameter :: fid = 18 ! id of files (read)
     !> general options
     integer :: max_iter = 100 !< maximum number of iterations
-    real(kind=8) :: ds = nanr !< sea level rise (m)
+    real(kind=8) :: ds = 0.d0 !< sea level rise (m)
     real(kind=8), parameter :: eps = 1.d-6 !< convergence criterion
     real(kind=8) :: toe_crest = nanr !< toe crest elevation (m)
     ! options for cross-shore profile
