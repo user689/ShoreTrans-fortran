@@ -29,20 +29,21 @@ module st_translate_profile
     !! @return the new profile
     subroutine translate_profile()
         implicit none
-        integer :: xm, x_upp, x_low, xi_est, xi_prev
-        real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr
+        real(kind=8), dimension(n_pts) :: z_low, z_upp, z_m
+        integer :: i, xm, x_upp, x_low, xi_est
+        real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr, f_sq
         character(len=charlen) :: msg
-        integer :: i
-        real(kind=8) :: f_sq
 
         allocate(z_final(n_pts)) ! allocate space for the final profile
         ! upper and lower bounds
         x_upp = min(n_pts - doc_index, doc_index - 2 - toe_crest_index)
         call get_profile(z_final, x_upp)
         dv_upp = dv
+        z_upp = z_final
         x_low = max(1 - toe_crest_index, doc_index -1 - n_pts)
         call get_profile(z_final, x_low)
         dv_low = dv
+        z_low = z_final
         xi_est = bruun_estimate() ! bruun estimate
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
@@ -52,6 +53,7 @@ module st_translate_profile
                 if (i == 1) xm =xi_est  ! better initial guess
                 call get_profile(z_final, xm)
                 dv_m = dv ! get the function value at the new estimate
+                z_m = z_final
                 f_sq = sqrt(dv_m * dv_m - (dv_upp * dv_low))
                 if (eql(f_sq, 0.d0)) then
                     xi_est = xm
@@ -60,11 +62,8 @@ module st_translate_profile
                 end if
                 ! apply the false position method
                 x_curr = (xm - x_low) * dv_m / f_sq
-                if (dv_low .gt. dv_upp) then
-                    xi_est = xm + nint(x_curr)
-                else
-                    xi_est = xm - nint(x_curr)
-                end if
+                x_curr= xm + sign(1.d0, dv_low - dv_upp) * x_curr
+                xi_est = NINT(x_curr + 0.5 * SIGN(1.d0, xm - x_curr))
                 call get_profile(z_final, xi_est) ! apply the new estimate
                 dv_est = dv
                 ! log the results
@@ -79,49 +78,72 @@ module st_translate_profile
                 else if (abs(x_low - x_upp) .lt. 2) then
                     if(abs(dv_low) .gt. abs(dv_upp)) then
                         xi_est = x_upp
+                        dv_est = dv_upp
+                        z_final = z_upp
                     else
                         xi_est = x_low
+                        dv_est = dv_low
+                        z_final = z_low
                     end if
                     exit ! found solution
                 end if
 
                 ! update the bounds
                 if (sign(1.d0, dv_m * dv_est) .lt. 0) then
-                    x_low = MIN(xm, xi_est)
-                    dv_low = MIN(dv_m, dv_est)
-                    x_upp = MAX(xm, xi_est)
-                    dv_upp = MAX(dv_m, dv_est)
+                   IF(xm .LT. xi_est) THEN
+                    x_low = xm
+                    dv_low = dv_m
+                    z_low = z_m
+                    x_upp = xi_est
+                    dv_upp = dv_est
+                    z_upp = z_final
+                   ELSE
+                    x_low = xi_est
+                    dv_low = dv_est
+                    z_low = z_final
+                    x_upp = xm
+                    dv_upp = dv_m
+                    z_upp = z_m
+                   END IF
                 else if (sign(1.d0, dv_low * dv_est) .lt. 0) then
                     x_upp = xi_est
                     dv_upp = dv_est
+                    z_low = z_final
                 else if (sign(1.d0, dv_upp * dv_est) .lt. 0) then
                     x_low = xi_est
                     dv_low = dv_est
+                    z_upp = z_final
                 else
                     ! this should never happen
                     call logger(0, 'Unkown error in main_loop (ST_TRANSLATE_PROFILE)')
                 end if
-                xi_prev = xi_est ! update the previous estimate
             end do
             if (i .eq. max_iter) then
                 call logger(1, 'Maximum number of iterations reached')
                 call logger(1, 'Solution may not be the real minimum')
             end if
         else if (eql(abs(dv_upp), 0.d0)) then
-            ! get upper bound
+            ! update upper bound
             xi_est = x_upp
             dv_est = dv_upp
+            z_final = z_upp
         else if (eql(abs(dv_low), 0.d0)) then
-            ! get lower bound
+            ! update lower bound
             xi_est = x_low
             dv_est = dv_low
+            z_final = z_low
         else
             ! no solution can be found
+            ! TODO: think how can we make this work for all situations
+            ! e.g: no DoC (lagoons), incomplete profiles
             call logger(0, 'No solution can be found')
             call logger(0, 'Please check the profile')
         end if
         xi = xi_est
-        call get_profile(z_final, xi)
+        dv = dv_est
+        ! if we did everything correctly, we shouldn't need to call this
+        ! again
+        !call get_profile(z_final, xi)
         call logger(2, 'Final xi: ' // adj(num2str(xi)))
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
