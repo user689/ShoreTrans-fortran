@@ -63,10 +63,10 @@ module st_translate_profile
                 ! apply the false position method
                 x_curr = (xm - x_low) * dv_m / f_sq
                 x_curr= xm + sign(1.d0, dv_low - dv_upp) * x_curr
+                ! round into the new interval (faster convergence)
                 xi_est = NINT(x_curr + 0.5 * SIGN(1.d0, xm - x_curr))
                 call get_profile(z_final, xi_est) ! apply the new estimate
                 dv_est = dv
-                ! log the results
                 write (msg, '(I2,A,I8,A,I8,A,I8,A,F8.2,A,F8.2,A,F8.2)')&
                 & i, ' | ', x_low, ' | ', x_upp, ' | ', xi_est, ' | ', &
                 & dv_low, ' | ', dv_upp, ' | ', dv_est
@@ -91,19 +91,13 @@ module st_translate_profile
                 ! update the bounds
                 if (sign(1.d0, dv_m * dv_est) .lt. 0) then
                    IF(xm .LT. xi_est) THEN
-                    x_low = xm
-                    dv_low = dv_m
-                    z_low = z_m
-                    x_upp = xi_est
-                    dv_upp = dv_est
-                    z_upp = z_final
+                    x_low = xm; dv_low = dv_m
+                    z_low = z_m; x_upp = xi_est
+                    dv_upp = dv_est; z_upp = z_final
                    ELSE
-                    x_low = xi_est
-                    dv_low = dv_est
-                    z_low = z_final
-                    x_upp = xm
-                    dv_upp = dv_m
-                    z_upp = z_m
+                    x_low = xi_est; dv_low = dv_est
+                    z_low = z_final; x_upp = xm
+                    dv_upp = dv_m; z_upp = z_m
                    END IF
                 else if (sign(1.d0, dv_low * dv_est) .lt. 0) then
                     x_upp = xi_est
@@ -141,9 +135,6 @@ module st_translate_profile
         end if
         xi = xi_est
         dv = dv_est
-        ! if we did everything correctly, we shouldn't need to call this
-        ! again
-        !call get_profile(z_final, xi)
         call logger(2, 'Final xi: ' // adj(num2str(xi)))
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
