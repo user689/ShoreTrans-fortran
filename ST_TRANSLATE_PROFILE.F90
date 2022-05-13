@@ -35,6 +35,7 @@ module st_translate_profile
         character(len=charlen) :: msg
 
         allocate(z_final(n_pts)) ! allocate space for the final profile
+        dv_est = nanr;
         ! upper and lower bounds
         x_upp = min(n_pts - doc_index, doc_index - 2 - toe_crest_index)
         call get_profile(z_final, x_upp)
@@ -132,6 +133,7 @@ module st_translate_profile
             ! e.g: no DoC (lagoons), incomplete profiles
             call logger(0, 'No solution can be found')
             call logger(0, 'Please check the profile')
+            STOP
         end if
         xi = xi_est
         dv = dv_est
