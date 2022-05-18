@@ -37,15 +37,18 @@ module st_translate_profile
         allocate(z_final(n_pts)) ! allocate space for the final profile
         dv_est = nanr;
         ! upper and lower bounds
-        x_upp = min(n_pts - doc_index, doc_index - 2 - toe_crest_index)
+        x_upp = min(n_pts - doc_index -1, doc_index - 2 - toe_crest_index)
         call get_profile(z_final, x_upp)
         dv_upp = dv
         z_upp = z_final
-        x_low = max(1 - toe_crest_index, doc_index -1 - n_pts)
+        x_low = - min( toe_crest_index-1, n_pts-doc_index-1)
         call get_profile(z_final, x_low)
         dv_low = dv
         z_low = z_final
         xi_est = bruun_estimate() ! bruun estimate
+        if(xi_est.GT.x_low.OR.xi_est.LT.x_upp) then
+            xi_est = nint(0.5d0 * (x_upp + x_low))
+        end if
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
                           'dvlow |    dvupp |    dv')
@@ -196,6 +199,7 @@ module st_translate_profile
             start_ind = doc_index - 1
             end_ind = doc_index + xi_tmp
         end if
+        call logger(2, 'xi_tmp' // adj(num2str(xi_tmp)))
         z_out(start_ind+1:end_ind) =  interp1(x(start_ind), x(end_ind),&
                                     z_out(start_ind), z(end_ind), &
                                          x(start_ind+1:end_ind))
