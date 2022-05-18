@@ -46,7 +46,7 @@ module st_translate_profile
         dv_low = dv
         z_low = z_final
         xi_est = bruun_estimate() ! bruun estimate
-        if(xi_est.GT.x_low.OR.xi_est.LT.x_upp) then
+        if(xi_est.GT.x_upp.OR.xi_est.LT.x_low) then
             xi_est = nint(0.5d0 * (x_upp + x_low))
         end if
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
