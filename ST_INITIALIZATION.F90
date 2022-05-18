@@ -76,7 +76,7 @@ module st_initialization
         ! Depth of closure (1 and 2)
         ! set up doc_index (upper depth of closure)
         if (eql(doc , nanr)) then
-            doc = - 10.d0
+            doc = minval(z)
             call logger(1, 'Depth of closure not set, using doc=: ' &
                        // adj(num2str(doc)))
         else
@@ -86,6 +86,11 @@ module st_initialization
         tmp_array = 1
         where(z .ge. doc) tmp_array = 0
         doc_index = minloc(tmp_array, 1, back=.true.) + 1
+        if(doc_index.gt.size(z)) then
+            call logger(1, 'DOC level not reached using min(z)')
+            doc_index = size(z)
+        end if
+
         call logger(3, 'Depth of closure index set to: ' // &
                    adj(num2str(doc_index)))
 
@@ -100,9 +105,12 @@ module st_initialization
         tmp_array = 1
         where(z .ge. doc2) tmp_array = 0
         doc2_index = minloc(tmp_array, 1, back=.true.) + 1
+        if(doc2_index.gt.size(z)) then
+            call logger(1, 'DOC2 index not reached, using min(z)')
+            doc2_index = size(z)
+        end if
         call logger(3, 'Depth of closure 2 index set to: ' // &
                    adj(num2str(doc2_index)))
-
         ! sediment flux (volume), default is 0.0
         if (.not. eql(dv_input, 0.d0)) then ! volume change
             call logger(3, 'Sediment (budget/deficit) = ' // &
