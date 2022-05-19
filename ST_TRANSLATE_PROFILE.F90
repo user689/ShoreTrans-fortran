@@ -137,7 +137,7 @@ module st_translate_profile
         end if
         xi = xi_est
         dv = dv_est
-        call logger(2, 'Final xi: ' // adj(num2str(xi)))
+        call logger(2, 'Final xi: ' // adj(num2str(xi *dx)) // ' m ('// adj(num2str(xi)) //')')
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
 
@@ -169,7 +169,7 @@ module st_translate_profile
         call logger (3, 'h = '//adj(num2str(h)))
         call logger (3, 'w = '//adj(num2str(w)))
         call logger (-1, 'Initial estimate (bruun) xi = ' &
-        // adj(num2str(xi_est * dx)) // ' (m)(' // adj(num2str(xi_est)) &
+        // adj(num2str(xi_est * dx)) // ' m (' // adj(num2str(xi_est)) &
         // ')')
     end function bruun_estimate
 
