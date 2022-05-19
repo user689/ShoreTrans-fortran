@@ -51,7 +51,9 @@ module st_initialization
         if (eql(toe_crest , nanr) .and.     &
             (toe_crest_index.EQ.nani)) then
             toe_crest = maxval(z)
-            toe_crest_index =  maxloc(z, 1)
+            tmp_array = 1
+            where(z .ge. toe_crest) tmp_array = 0
+            toe_crest_index = minloc(tmp_array, 1, back=.true.)
             call logger(1, 'none of the toe/crest values were set, '// &
                        'using the maximum of the profile')
             call logger(3, 'setting toe/crest value: ' // &
