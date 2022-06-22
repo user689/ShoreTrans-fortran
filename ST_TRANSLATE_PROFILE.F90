@@ -139,7 +139,7 @@ module st_translate_profile
             STOP
         end if
         xi = xi_est
-        dv = dv_est
+        call get_profile(z_final, xi_est)
         call logger(2, 'Final xi: ' // adj(num2str(xi *dx)) // ' m ('// adj(num2str(xi)) //')')
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
