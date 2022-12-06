@@ -43,7 +43,6 @@ module st_initialization
         if(xshorefilename.NE.nans) call read_xshore() ! read the cross shore profile
         dx = X(2) - X(1)
         allocate(tmp_array(n_pts))
-
         ! defaults for the toe/crest values
         ! if not set, then the default values are the
         ! maximum of the profile
@@ -53,7 +52,8 @@ module st_initialization
             toe_crest = maxval(z)
             tmp_array = 1
             where(z .ge. toe_crest) tmp_array = 0
-            toe_crest_index = minloc(tmp_array, 1, back=.true.)
+            toe_crest_index = n_pts - minloc(tmp_array(n_pts:1:-1), 1)+2
+
             call logger(1, 'none of the toe/crest values were set, '// &
                        'using the maximum of the profile')
             call logger(3, 'setting toe/crest value: ' // &
@@ -66,7 +66,7 @@ module st_initialization
         if (toe_crest_index.EQ.nani) then
             tmp_array = 1
             where(z .ge. toe_crest) tmp_array = 0
-            toe_crest_index = minloc(tmp_array, 1, back=.true.)
+            toe_crest_index = n_pts - minloc(tmp_array(n_pts:1:-1), 1)+1
             call logger(3, 'setting toe/crest index: ' // &
                        adj(num2str(toe_crest_index)))
         else if (eql(toe_crest,nanr)) then
@@ -87,7 +87,7 @@ module st_initialization
         end if
         tmp_array = 1
         where(z .ge. doc) tmp_array = 0
-        doc_index = minloc(tmp_array, 1, back=.true.) + 1
+        doc_index = n_pts - minloc(tmp_array(n_pts:1:-1), 1) + 2
         if(doc_index.gt.size(z)) then
             call logger(1, 'DOC level not reached using min(z)')
             doc_index = size(z)
@@ -106,7 +106,7 @@ module st_initialization
         end if
         tmp_array = 1
         where(z .ge. doc2) tmp_array = 0
-        doc2_index = minloc(tmp_array, 1, back=.true.) + 1
+        doc2_index = n_pts - minloc(tmp_array(n_pts:1:-1), 1) + 2
         if(doc2_index.gt.size(z)) then
             call logger(1, 'DOC2 index not reached, using min(z)')
             doc2_index = size(z)
