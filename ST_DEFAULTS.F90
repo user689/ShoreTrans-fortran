@@ -26,6 +26,7 @@ module st_defaults
                     !! prevents slump for high cliffs
     end type slump_type
     type(slump_type) :: slump = slump_type(1, 30.d0, 100.d0) !< default values
+    real(kind=8), parameter :: pi = 3.141592653589793d0 ! value of pi
 #endif
     ! shoreline variables
     integer :: n_pts !< number of points in shoreline (size of x,z arrays)
