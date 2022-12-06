@@ -43,7 +43,7 @@ module st_slump
         dx1(1) = 0.d0
         dz1 = 0.d0
         dz1(2:s) = z_temp(1:s-1) - z_temp(2:s)
-        dune_angles = atan2d(dz1,dx1) ! angles of dune
+        dune_angles = atan2(dz1, dx1) *180/pi! angles of dune
         dune_indices = 0
 
         where((dune_angles > slump%slope) .and. (z_temp < slump%cap))
@@ -67,8 +67,10 @@ module st_slump
                     dune_offset = 1
                     exit
                 end if
-                dune_angle = atan2d(z_temp(dune_offset) - z_temp(ind2),&
-                                    x(ind2) - x(dune_offset))
+                dune_angle = atan2( (z_temp(dune_offset) - z_temp(ind2)), &
+                                 (x(ind2) - x(dune_offset)) ) * 180/pi
+                ! dune_angle = atan2d(z_temp(dune_offset) - z_temp(ind2),&
+                                    ! x(ind2) - x(dune_offset))
             end do
             ! interpolate section of profile to be slopped
 
