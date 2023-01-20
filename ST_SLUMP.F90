@@ -23,8 +23,10 @@ module st_slump
     !! @param[in] cap height above which no slump occurs
     !! @param[in] slope slope of the profile to slump to
     !! @return the slumped profile
-    subroutine slump_profile(z_temp)
+    subroutine slump_profile(z_temp, XI)
         real(kind=8), dimension(:), intent(inout) :: z_temp
+        integer,  intent(in) :: XI
+        character(len=charlen) :: msg
         real(kind=8), allocatable, dimension(:) :: dune_angles(:), &
                                              dx1(:), dz1(:)
         integer, allocatable, dimension(:) :: dune_indices(:), &
@@ -32,6 +34,7 @@ module st_slump
         integer :: i, s, ind1, ind2, start_index
         integer :: pts, dune_offset
         real(kind=8) :: dune_angle
+        logical :: isprint ! print message only once
 
         if (slump%switch == 0) return ! no slumping
         s= size(z_temp)
@@ -51,6 +54,7 @@ module st_slump
         end where
         allocate(dune_n(sum(dune_indices) + 1))
         dune_n = pack([(i,i=1,s)],dune_indices == 1)
+        isprint = .TRUE.
         do i=1,sum(dune_indices) ! loop over dunes
             pts = 0
             ind2 = dune_n(i)
@@ -60,11 +64,16 @@ module st_slump
             do while (dune_angle > slump%slope)
                 pts = pts + 1
                 dune_offset = ind1 - pts
-                if (dune_offset .LT. 0) then
+                if (dune_offset .LE. 0) then
                     ! can't go back any further
-                call logger (1, 'Ran out of profile to slump dune '// &
-                    'Try inccreasing the onshore length')
+                    if(isprint) then
+                        write(msg, '(A,I0,A)') '[xi=', XI,'] Ran out of' //&
+                        'profile to slump dune. Try increasing the onshore length'
+                        call logger (1, adj(msg))
+                        isprint = .FALSE.
+                    end if
                     dune_offset = 1
+                    pts = ind1 - 1
                     exit
                 end if
                 dune_angle = atan2( (z_temp(dune_offset) - z_temp(ind2)), &
@@ -72,10 +81,9 @@ module st_slump
                 ! dune_angle = atan2d(z_temp(dune_offset) - z_temp(ind2),&
                                     ! x(ind2) - x(dune_offset))
             end do
-            ! interpolate section of profile to be slopped
 
+            ! interpolate section of profile to be slopped
             start_index = ind1 - pts
-            !PRINT *, start_index
             z_temp(start_index:ind2) = interp1(x(start_index), x(ind2),&
                                                 z_temp(start_index),&
                                                 z_temp(ind2), &

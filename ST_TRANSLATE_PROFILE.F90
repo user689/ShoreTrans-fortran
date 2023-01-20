@@ -51,7 +51,7 @@ module st_translate_profile
         end if
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
-                          'dvlow |    dvupp |    dv')
+                          'dvlow |   dvupp  |    dv    |')
             do i=1,max_iter
                 xm = nint(0.5d0 * (x_upp + x_low)) ! update estimate
                 if (i == 1) xm =xi_est  ! better initial guess
@@ -71,9 +71,9 @@ module st_translate_profile
                 xi_est = NINT(x_curr + 0.5 * SIGN(1.d0, xm - x_curr))
                 call get_profile(z_final, xi_est) ! apply the new estimate
                 dv_est = dv
-                write (msg, '(I2,A,I8,A,I8,A,I8,A,F8.2,A,F8.2,A,F8.2)')&
-                & i, ' | ', x_low, ' | ', x_upp, ' | ', xi_est, ' | ', &
-                & dv_low, ' | ', dv_upp, ' | ', dv_est
+                write (msg, '(I2,A,I8,A,I8,A,I8,A,1PE8.1,A,E8.1,A,E8.1,A)') &
+                i, ' | ', x_low, ' | ', x_upp, ' | ', xi_est, ' | ', &
+                dv_low, ' | ', dv_upp, ' | ', dv_est, ' |'
                 call logger(3, adj(msg))
 
                 ! convergence checks
@@ -134,8 +134,7 @@ module st_translate_profile
             ! no solution can be found
             ! TODO: think how can we make this work for all situations
             ! e.g: no DoC (lagoons), incomplete profiles
-            call logger(0, 'No solution can be found')
-            call logger(0, 'Please check the profile')
+            call logger(0, 'No solution can be found. Please check the profile')
             STOP
         end if
         xi = xi_est
@@ -171,7 +170,7 @@ module st_translate_profile
         call logger (3, 'ds = '//adj(num2str(ds)))
         call logger (3, 'h = '//adj(num2str(h)))
         call logger (3, 'w = '//adj(num2str(w)))
-        call logger (-1, 'Initial estimate (bruun) xi = ' &
+        call logger (3, 'Initial estimate (bruun) xi = ' &
         // adj(num2str(xi_est * dx)) // ' m (' // adj(num2str(xi_est)) &
         // ')')
     end function bruun_estimate
@@ -259,7 +258,7 @@ module st_translate_profile
         call reset_elevation(z1, xi_tmp) ! reset elevation at the end of the profile
         call smooth_profile(z1, xi_tmp) ! interpolate at the end of the profile
         ! slump profile (erosion of dunes)
-        call slump_profile(z1)
+        call slump_profile(z1, xi_tmp)
         ! calculate volume difference
         v0 = trapz(x(1:doc2_index), z(1:doc2_index) - doc2)
         v1 = trapz(x(1:doc2_index), z1(1:doc2_index) - doc2)
