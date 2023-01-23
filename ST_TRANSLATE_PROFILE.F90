@@ -198,6 +198,18 @@ module st_translate_profile
             start_ind = doc_index - 1
             end_ind = doc_index + xi_tmp
         end if
+
+        ! additional checks to remove errors
+        if (start_ind .le. 0) then 
+            start_ind =0;
+            call logger(1, 'The smoothing points are beyond the edge of the profile. '// &
+            'Begin smoothing from the start of the profile. ')
+
+        else if(end_ind .ge. n_pts) then
+            end_ind = n_pts
+            call logger(1, 'The smoothing points are beyond the edge of the profile. '// &
+            'End smoothing at the end of the profile.')
+        end if
         z_out(start_ind+1:end_ind) =  interp1(x(start_ind), x(end_ind),&
                                     z_out(start_ind), z(end_ind), &
                                          x(start_ind+1:end_ind))
