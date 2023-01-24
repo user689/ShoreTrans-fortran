@@ -223,9 +223,13 @@ module st_translate_profile
     !! also maintains the crest of the profile in case the profile
     !! is marching offshore
     subroutine reset_elevation(z_tmp, xi_tmp)
-        real(kind=8), allocatable, intent(inout) :: z_tmp(:)
+        real(kind=8), dimension(n_pts), intent(inout) :: z_tmp
         integer, intent(in) :: xi_tmp ! current xi value
-        where(z_tmp .gt. z .and. x .le. x(toe_crest_index)) z_tmp = z
+        if (rollover .eq. 0) then
+            where(z_tmp .gt. z .and. x .le. x(toe_crest_index)) z_tmp = z
+        else if(rollover .eq. 2) then
+            where(z_tmp .gt. z .and. x .lt. x(toe_crest_index)) z_tmp = toe_crest
+        end if 
 
         ! As the profile marches offshore,
         ! this maintains the crest of the barrier
@@ -234,6 +238,33 @@ module st_translate_profile
                                                 toe_crest + ds
         end if
     end subroutine reset_elevation
+
+    subroutine rollover_profile(z_tmp, xi_tmp)
+        real(kind=8), dimension(n_pts) , intent(inout) :: z_tmp ! current z
+        real(kind=8), dimension(n_pts) :: z_noWash
+        integer, intent(in) :: xi_tmp ! current xi value
+        real(kind=8) :: z_back, z_step, z_step_n
+        integer :: ind_wash
+
+        z_noWash = z_tmp
+        ind_wash = toe_crest_index + xi_tmp
+        z_back = z_tmp(ind_wash)
+        z_step = tan(pi/180 * roll_backSlope )
+        z_step_n = z_step
+        do
+            ind_wash = ind_wash - 1
+            if(ind_wash .le. 0) exit ! check for edge cases
+            z_tmp(ind_wash) = z_back - z_step_n
+            z_step_n = z_step_n + z_step
+            ! if overwash has dipped below existing profile, bring it back up
+            if (z_tmp(ind_wash) .le. z_noWash(ind_wash)) then
+                z_tmp(ind_wash) = z_noWash(ind_wash)
+                exit
+            end if
+    
+        end do
+        
+    end subroutine rollover_profile 
 
     !> @brief translate the profile
     !! @details translate the profile by xi
@@ -270,7 +301,11 @@ module st_translate_profile
         call reset_elevation(z1, xi_tmp) ! reset elevation at the end of the profile
         call smooth_profile(z1, xi_tmp) ! interpolate at the end of the profile
         ! slump profile (erosion of dunes)
-        call slump_profile(z1, xi_tmp)
+        if (rollover .eq. 0) then
+            call slump_profile(z1, xi_tmp)
+        else if (rollover .gt. 0) then ! 1 or 2
+            call rollover_profile(z1, xi_tmp)
+        end if
         ! calculate volume difference
         v0 = trapz(x(1:doc2_index), z(1:doc2_index) - doc2)
         v1 = trapz(x(1:doc2_index), z1(1:doc2_index) - doc2)
