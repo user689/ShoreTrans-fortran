@@ -101,6 +101,10 @@ module st_parameter_reading
           read (line, *, iostat=ios) rock
           case ('verbose')
           read (line, *, iostat=ios) verbose
+          case ('rollover')
+          read (line, *, iostat=ios) rollover
+          case ('roll_backslope')
+          read (line, *, iostat=ios) roll_backSlope
           case ('') ! skip empty lines
           case default
               call logger(1, 'unknown parameter ' // &

@@ -47,6 +47,8 @@ module st_defaults
     integer :: doc_index = nani !< index of dc
     integer :: doc2_index = nani !< index of dc2
     integer :: toe_crest_index = nani !< index of toe_crest
+    integer :: rollover = 0 !< 0=off, 1=on,2=on with no height preservation
+    real(kind=8) :: roll_backSlope = 4 !< angle in degrees of the onshore slope
     ! internal variables
     character(charlen) :: dir_name = '' !< directory of case to be run
     character(charlen) :: xshorefilename = nans !< name of file containing x and z
