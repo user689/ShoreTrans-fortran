@@ -119,11 +119,18 @@ module st_initialization
                        adj(num2str(dv_input)))
         end if
 
-        ! slump (erosion of dunes) default is True, i.e. slump
-        call logger(3, 'slumping set to: ' // &
-                   adj(num2str(slump%switch)) // ' with slope: ' // &
-                   adj(num2str(slump%slope)) // ' and cap: ' // &
-                   adj(num2str(slump%cap)))
+        if (rollover .EQ. 0) then
+            ! slump (erosion of dunes) default is True, i.e. slump
+            call logger(3, 'slumping set to: ' // &
+                    adj(num2str(slump%switch)) // ' with slope: ' // &
+                    adj(num2str(slump%slope)) // ' and cap: ' // &
+                    adj(num2str(slump%cap)))
+        else
+            call logger(3, 'Rollover set to: '// adj(num2str(rollover)) // &
+            ' with back slope angle (deg): ' // adj(num2str(roll_backSlope)) )
+
+        end if
+
     end subroutine setup_shoretrans
 
     subroutine initialize_transect(x,z)
@@ -218,6 +225,7 @@ module st_initialization
                                         ' value') !only warning
         end if
 
+        call assert(rollover.le.2.and.rollover.ge.0, 'rollover must be 0,1 or 2' , 0) 
     end subroutine check_errors
 
 end module st_initialization
