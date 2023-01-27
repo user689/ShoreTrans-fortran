@@ -52,7 +52,7 @@ module st_initialization
             toe_crest = maxval(z)
             tmp_array = 1
             where(z .ge. toe_crest) tmp_array = 0
-            toe_crest_index = n_pts - minloc(tmp_array(n_pts:1:-1), 1)+2
+            toe_crest_index = n_pts - minloc(tmp_array(n_pts:1:-1), 1)+1
 
             call logger(1, 'none of the toe/crest values were set, '// &
                        'using the maximum of the profile')
