@@ -249,7 +249,7 @@ module st_translate_profile
         z_noWash = z_tmp
         ind_wash = toe_crest_index + xi_tmp
         z_back = z_tmp(ind_wash)
-        z_step = tan(pi/180 * roll_backSlope )
+        z_step = dx * tan(pi/180 * roll_backSlope )
         z_step_n = z_step
         do
             ind_wash = ind_wash - 1
