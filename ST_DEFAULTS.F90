@@ -26,6 +26,14 @@ module st_defaults
                     !! prevents slump for high cliffs
     end type slump_type
     type(slump_type) :: slump = slump_type(1, 30.d0, 100.d0) !< default values
+
+    type wall_type
+        integer :: switch  !< 0=no wall, 1=wall
+        real(kind=8) :: level  !< z level at wall index
+        real(kind=8) :: x ! wall x location
+        integer :: index   ! wall index
+    end type wall_type
+    type(wall_type) :: wall = wall_type(0, nanr, nanr, nani) !< default values
     real(kind=8), parameter :: pi = 3.141592653589793d0 ! value of pi
     integer :: rollover = 0 !< 0=off, 1=on,2=on with no height preservation
     real(kind=8) :: roll_backSlope = 4 !< angle in degrees of the onshore slope
