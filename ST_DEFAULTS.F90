@@ -32,8 +32,12 @@ module st_defaults
         real(kind=8) :: level  !< z level at wall index
         real(kind=8) :: x ! wall x location
         integer :: index   ! wall index
+        logical :: overwash ! if true, sediment is allowed to pile behind the wall 
+        logical :: z_min_check ! check to see if pt offshore of wall has eroded below WALL_Z_MIN
+        real(kind=8) :: z_min 
+        logical :: no_erode ! allows erosion behind wall
     end type wall_type
-    type(wall_type) :: wall = wall_type(0, nanr, nanr, nani) !< default values
+    type(wall_type) :: wall = wall_type(0, nanr, nanr, nani, .false., .false., -2, .false.) !< default values
     real(kind=8), parameter :: pi = 3.141592653589793d0 ! value of pi
     integer :: rollover = 0 !< 0=off, 1=on,2=on with no height preservation
     real(kind=8) :: roll_backSlope = 4 !< angle in degrees of the onshore slope
@@ -81,4 +85,5 @@ module st_defaults
     integer :: rock = 0 !< 0=no rock, 1=rock
     real(kind=8), allocatable :: z_rock(:) !< rock layer z-values
     real(kind=8), allocatable :: z0_rock(:) !< to calculate the volume 
+    logical :: wall_z_initial = .false. ! has erosion exeeded z_min for wall
 end module st_defaults
