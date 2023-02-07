@@ -22,8 +22,7 @@ module st_helper
         module procedure num2str_int
         module procedure num2str_real
     end interface
-
-
+    
     contains
 
     !
@@ -469,26 +468,6 @@ module st_helper
         call system_clock(count, count_rate)
         t = count * 1.d0/count_rate
     end function get_time
-
-        !> @brief assert that a condition is true
-    !! param[in] var variable to check
-    !! param[in] msg message to print if var is false
-    !! param[in] priority priority of the message (0: error, 1: warning, 2: info, 3: extra)
-    subroutine assert(var, msg, priority)
-        logical, intent(in) :: var
-        integer, intent(in), optional :: priority
-        character(len=*), intent(in) :: msg
-        if (present(priority)) then
-            if (.not. var) then
-                call logger(priority, adj(msg))
-                if(priority .eq. 0) stop ! stop if error
-            end if
-        else
-            if (.not. var) then
-                call logger(1, adj(msg)) ! defaults to warning
-            end if
-        end if
-    end subroutine assert
     !
     ! END SECTION: miscellaneous functions
     !
