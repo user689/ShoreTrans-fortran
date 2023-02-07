@@ -43,6 +43,7 @@ module st_initialization
         if(xshorefilename.NE.nans) call read_xshore() ! read the cross shore profile
         dx = X(2) - X(1)
         allocate(tmp_array(n_pts))
+        allocate(z0_rock(n_pts))
         ! defaults for the toe/crest values
         ! if not set, then the default values are the
         ! maximum of the profile
@@ -75,6 +76,7 @@ module st_initialization
                        adj(num2str(toe_crest)))
         end if
 
+        where ((x .le. x(toe_crest_index)) .and. (z .le. z_rock)) z = z_rock
         ! Depth of closure (1 and 2)
         ! set up doc_index (upper depth of closure)
         if (eql(doc , nanr)) then
@@ -130,7 +132,8 @@ module st_initialization
             ' with back slope angle (deg): ' // adj(num2str(roll_backSlope)) )
 
         end if
-
+        z0_rock = z
+        where(z_rock .gt. z) z0_rock = z_rock
     end subroutine setup_shoretrans
 
     subroutine initialize_transect(x,z)
@@ -159,7 +162,6 @@ module st_initialization
             else
                 z_rock = interp1_vec(x_tmp, x, rock_tmp)
             end if
-
             ! update the value of the toe_crest_index if needed
             if (toe_crest_index.NE.nani) then 
                 toe_crest_index = nint(toe_crest_index * dx_tmp/dx)
