@@ -49,6 +49,10 @@ module st_translate_profile
         if (xi_est.lt.x_low.or.xi_est.gt.x_upp) then ! check in case bruun estimate is outside of interval
             xi_est = nint(0.5d0 * (x_upp + x_low))
         end if
+        write(msg, '(A,I8,A,E8.1)') 'xlow = ', x_low, ' dv_low =', dv_low
+        call logger(3, adj(msg))
+        write(msg, '(A,I8,A,E8.1)') 'xupp = ', x_upp, ' dv_upp =', dv_upp
+        call logger(3, adj(msg))
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
                           'dvlow |   dvupp  |    dv    |')
@@ -266,6 +270,13 @@ module st_translate_profile
         
     end subroutine rollover_profile 
 
+    ! raise profile that is below the rock profile
+    subroutine raise_rock(z_tmp)
+        real(kind=8), dimension(n_pts), intent(inout) :: z_tmp
+        if(rock.eq. 0) return
+        where (z_tmp .le. z_rock) z_tmp = z_rock
+    end subroutine raise_rock
+
     !> @brief translate the profile
     !! @details translate the profile by xi
     !! then calculate the difference in volume between the
@@ -298,6 +309,9 @@ module st_translate_profile
         ! active zone is the zone that is translated
         active_ind = (/(i, i=(toe_crest_index+xi_tmp),(doc_index-1))/)
         z1(active_ind) = z1(active_ind - xi_tmp) ! move profile to the right
+        print *, 'before' , z1
+        call raise_rock(z1) ! reset profile above rock profile
+        print *, 'after', z1
         call reset_elevation(z1, xi_tmp) ! reset elevation at the end of the profile
         call smooth_profile(z1, xi_tmp) ! interpolate at the end of the profile
         ! slump profile (erosion of dunes)
@@ -306,8 +320,9 @@ module st_translate_profile
         else if (rollover .gt. 0) then ! 1 or 2
             call rollover_profile(z1, xi_tmp)
         end if
+        call raise_rock(z1) ! last check for rock
         ! calculate volume difference
-        v0 = trapz(x(1:doc2_index), z(1:doc2_index) - doc2)
+        v0 = trapz(x(1:doc2_index), z0_rock(1:doc2_index) - doc2)
         v1 = trapz(x(1:doc2_index), z1(1:doc2_index) - doc2)
         dv = v1 - v0 - dv_input ! volume difference (error)
     end subroutine get_profile
