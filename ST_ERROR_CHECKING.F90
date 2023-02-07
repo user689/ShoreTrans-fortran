@@ -31,7 +31,14 @@ module st_error_checking
                 call assert(slump%cap.ge.0,'slump cap set to a negative' //&
                                             ' value') !only warning
             end if
-    
+
+            ! wall parameters
+            if (wall%switch .eq. 1) then
+                call assert(eql(wall%x, nanr) .and. eql(wall%level,nanr), &
+                    'Wall switch is turned on' //&
+                    ' but none of wall_x or wall_level are set.', 0)
+            end if
+             
             call assert(rollover.le.2.and.rollover.ge.0, 'rollover must be 0,1 or 2' , 0) 
     end subroutine check_errors
     
