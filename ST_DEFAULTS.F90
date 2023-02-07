@@ -71,5 +71,6 @@ module st_defaults
     real(kind=8) :: dv_input = 0.d0 !< input volume change
     ! options for rock layer
     integer :: rock = 0 !< 0=no rock, 1=rock
-    real(kind=8), allocatable, dimension(:) :: z_rock(:) !< rock layer z-values
+    real(kind=8), allocatable :: z_rock(:) !< rock layer z-values
+    real(kind=8), allocatable :: z0_rock(:) !< to calculate the volume 
 end module st_defaults
