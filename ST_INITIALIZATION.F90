@@ -36,11 +36,12 @@ module st_initialization
         if(xshorefilename.NE.nans) call read_xshore()
         dx = X(2) - X(1)
 
-        allocate(tmp_array(n_pts), z0_rock(n_pts))
+        allocate(z0_rock(n_pts))
 
         call setup_toe_crest ! setup the values of toe_crest & index
         call setup_doc ! setup doc level
-
+        call setup_rock_layer ! rock layer
+        call setup_wall ! setup wall level
         ! sediment flux (volume), default is 0.0
         if (.not. eql(dv_input, 0.d0)) then ! volume change
             call logger(3, 'Sediment (budget/deficit) = ' // &
@@ -59,19 +60,41 @@ module st_initialization
 
         end if
         
+
+    end subroutine setup_shoretrans
+
+    subroutine setup_wall
+        integer, dimension(n_pts) :: tmp_array
+        if (wall%switch .eq. 0) return
+        if (eql(wall%x, nanr)) then ! no wall_x, use wall_level
+            tmp_array = 1
+            where(z.ge.wall%level) tmp_array = 0
+            wall%index = n_pts - minloc(tmp_array(n_pts:1:-1), 1) + 1
+            wall%x = x(wall%index)
+        else
+            ! wall_x is set directly
+            wall%index = minval(abs(x - wall_x))
+            wall%level = z(wall%index)
+        end if
+        
+        if (z(wall%index + 1) .lt. wall%z_min) wall_z_initial =.true.
+        
+    end subroutine setup_wall
+
+    subroutine setup_rock_layer
         ! setup z value onshore
         where ((x .le. x(toe_crest_index)) .and. (z .le. z_rock)) z = z_rock
         if (rock.eq.1) call logger(3, 'rock layer enabled')
         z0_rock = z
         where(z_rock .gt. z) z0_rock = z_rock
-    end subroutine setup_shoretrans
+    end subroutine setup_rock_layer
 
     subroutine setup_toe_crest
         integer, dimension(n_pts) :: tmp_array
         ! defaults for the toe/crest values
         ! if not set, then the default values are the
         ! maximum of the profile
-        if (eql(toe_crest , nanr) .and. (toe_crest_index.EQ.nani)) then
+        if (eql(toe_crest , nanr) .and. (toe_crest_index.eq.nani)) then
             toe_crest = maxval(z)
             tmp_array = 1
             where(z .ge. toe_crest) tmp_array = 0
