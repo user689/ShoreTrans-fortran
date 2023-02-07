@@ -105,6 +105,12 @@ module st_parameter_reading
           read (line, *, iostat=ios) rollover
           case ('roll_backslope')
           read (line, *, iostat=ios) roll_backSlope
+          case ('wall')
+          read (line, *, iostat=ios) wall%switch
+          case ('wall_x')
+          read (line, *, iostat=ios) wall%x
+          case ('wall_level')
+          read (line, *, iostat=ios) wall%level
           case ('') ! skip empty lines
           case default
               call logger(1, 'unknown parameter ' // &
