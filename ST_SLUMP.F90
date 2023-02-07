@@ -89,6 +89,11 @@ module st_slump
                                                 z_temp(ind2), &
                                                 x(start_index:ind2))
 
+
+            if(rock.eq.1) then
+                where (z_temp .le. z_rock) z_temp = z_rock
+            end if
+
         end do
     end subroutine slump_profile
 
