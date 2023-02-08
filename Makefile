@@ -5,6 +5,7 @@ FFLAGS= -Wall -Wextra -fdefault-integer-8 -fimplicit-none -fall-intrinsics -O2 -
 SRC=ST_DEFAULTS.F90 \
 	ST_HELPER.F90 \
 	ST_SLUMP.F90 \
+	ST_WALL_VOLUME.F90 \
 	ST_PARAMETER_READING.F90 \
 	ST_ERROR_CHECKING.F90 \
 	ST_INITIALIZATION.F90 \
