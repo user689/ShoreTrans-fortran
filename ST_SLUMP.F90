@@ -26,9 +26,10 @@ module st_slump
     subroutine slump_profile(z_temp, XI)
         real(kind=8), dimension(:), intent(inout) :: z_temp
         integer,  intent(in) :: XI
+        real(kind=8), dimension(n_pts) :: z_max_slump
         character(len=charlen) :: msg
-        real(kind=8), allocatable, dimension(:) :: dune_angles(:), &
-                                             dx1(:), dz1(:)
+        real(kind=8), allocatable, dimension(:) :: dune_angles, &
+                                             dx1, dz1
         integer, allocatable, dimension(:) :: dune_indices(:), &
                                                 dune_n(:)
         integer :: i, s, ind1, ind2, start_index
@@ -54,6 +55,7 @@ module st_slump
         end where
         allocate(dune_n(sum(dune_indices) + 1))
         dune_n = pack([(i,i=1,s)],dune_indices == 1)
+        call wall_slump(z_max_slump) ! slump behind wall if necessary
         isprint = .TRUE.
         do i=1,sum(dune_indices) ! loop over dunes
             pts = 0
@@ -94,7 +96,50 @@ module st_slump
                 where (z_temp .le. z_rock) z_temp = z_rock
             end if
 
+            if (wall%switch.eq.1) then
+                where(z_temp.lt.z_max_slump) z_temp = z_max_slump
+            end if
+
         end do
     end subroutine slump_profile
+
+    ! calculate max slump behind the wall
+    subroutine wall_slump(z_max_slump)
+        real(kind=8), dimension(n_pts), intent(out) :: z_max_slump
+        real(kind=8) :: dz_wall, dune_angle1, dune_angle2
+        integer :: ind, dune_offset, pts
+
+        z_max_slump = z
+
+        if(wall%switch.eq.0) return
+        where(x.gt.x(wall%index)) z_max_slump = nanr
+        ind = wall%index -1
+
+        dz_wall = z(ind -1) - z_rock(ind)
+        dune_angle1 = abs(atan2(dz_wall, dx)) * 180/pi
+
+        if (dune_angle1.le.slump%slope) return  
+
+        dune_angle2 = dune_angle1
+        pts = 0 
+
+        do while(dune_angle2 .gt. slump%slope)
+            pts  = pts + 1
+            dune_offset = ind - pts - 1
+
+            if ( (dune_offset.eq. 0) ) then
+                    call logger(1, 'Max slump near wall error')
+                    dune_angle2 = 30.d0
+            else
+                dune_angle2 = atan2(z(dune_offset) - z_rock(ind), &
+                        x(ind) - x(dune_offset) ) * 180/pi
+            end if
+        end do
+
+        if (pts.ge.ind) return 
+        pts = ind - pts - 1
+        z_max_slump(pts:ind) = interp1( x(pts), x(ind), &
+                              z(pts), z_rock(ind), x(pts:ind) )
+    end subroutine wall_slump
 
 end  module st_slump
