@@ -9,12 +9,13 @@ module st_translate_profile
 #endif
     use st_defaults
     use st_helper
-    use st_slump, only: slump_profile
+    use st_slump
+    use st_wall_volume
 
 
     implicit none
-    INTEGER :: XI ! profile translation
-    public :: translate_profile, XI
+    integer :: xi
+    public :: translate_profile
 
 
 
@@ -49,10 +50,11 @@ module st_translate_profile
         if (xi_est.lt.x_low.or.xi_est.gt.x_upp) then ! check in case bruun estimate is outside of interval
             xi_est = nint(0.5d0 * (x_upp + x_low))
         end if
-        write(msg, '(A,I8,A,E8.1)') 'xlow = ', x_low, ' dv_low =', dv_low
-        call logger(3, adj(msg))
         write(msg, '(A,I8,A,E8.1)') 'xupp = ', x_upp, ' dv_upp =', dv_upp
         call logger(3, adj(msg))
+        write(msg, '(A,I8,A,E8.1)') 'xlow = ', x_low, ' dv_low =', dv_low
+        call logger(3, adj(msg))
+
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
                           'dvlow |   dvupp  |    dv    |')
@@ -188,9 +190,9 @@ module st_translate_profile
     !! @param[in] xi_tmp the shoreline recession/progression
     !! @param[inout] z_out the profile to be smoothed
     !! @return the smoothed profile
-    subroutine smooth_profile(z_out, xi_tmp)
+    subroutine smooth_profile(z_out, xi_tmp, z_nowall)
         integer, intent(in) :: xi_tmp
-        real(kind=8), allocatable, intent(inout) :: z_out(:)
+        real(kind=8), dimension(n_pts), intent(inout) :: z_out, z_nowall
         integer :: st_min, start_ind, end_ind ! smoothing profile
         ! smoothing the profile
         if (xi_tmp .le. 0) then
@@ -217,6 +219,8 @@ module st_translate_profile
         z_out(start_ind+1:end_ind) =  interp1(x(start_ind), x(end_ind),&
                                     z_out(start_ind), z(end_ind), &
                                          x(start_ind+1:end_ind))
+        z_nowall(start_ind+1:end_ind) = z_out(start_ind+1:end_ind)
+
     end subroutine smooth_profile
 
     !> @brief reset the elevation between the toe_crest and
@@ -306,20 +310,25 @@ module st_translate_profile
         z1 = z
         z1(toe_crest_index:doc_index-1) = z1(toe_crest_index:doc_index-1)&
                                          + ds
+        z_nowall = z1 ! for wall calculation
         ! active zone is the zone that is translated
         active_ind = (/(i, i=(toe_crest_index+xi_tmp),(doc_index-1))/)
         z1(active_ind) = z1(active_ind - xi_tmp) ! move profile to the right
-        print *, 'before' , z1
+
+        if (wall%switch.eq.1.and. .not.wall%overwash) then
+            z_nowall(active_ind) = z1(active_ind)
+            where(x.le.x(wall%index))  z1 = z
+        end if
         call raise_rock(z1) ! reset profile above rock profile
-        print *, 'after', z1
         call reset_elevation(z1, xi_tmp) ! reset elevation at the end of the profile
-        call smooth_profile(z1, xi_tmp) ! interpolate at the end of the profile
+        call smooth_profile(z1, xi_tmp, z_nowall) ! interpolate at the end of the profile
         ! slump profile (erosion of dunes)
         if (rollover .eq. 0) then
             call slump_profile(z1, xi_tmp)
         else if (rollover .gt. 0) then ! 1 or 2
             call rollover_profile(z1, xi_tmp)
         end if
+        call redistribute_volume(z1, z_nowall, xi_tmp)
         call raise_rock(z1) ! last check for rock
         ! calculate volume difference
         v0 = trapz(x(1:doc2_index), z0_rock(1:doc2_index) - doc2)
