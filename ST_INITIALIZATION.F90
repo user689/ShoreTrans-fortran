@@ -30,7 +30,7 @@ module st_initialization
         call check_errors()
         ! verbose output
         if (verbose .EQ. -1) call logger(-10, 'Deleting log file') ! delete log file
-        call logger(3, 'logging level set to ' num2str(verbose))
+        call logger(3, 'logging level set to ' // num2str(verbose))
 
         ! read cross shore profile
         if(xshorefilename.NE.nans) call read_xshore()
@@ -73,17 +73,18 @@ module st_initialization
             wall%x = x(wall%index)
         else
             ! wall_x is set directly
-            wall%index = minval(abs(x - wall_x))
+            wall%index = minloc(abs(x - wall%x), 1)
             wall%level = z(wall%index)
         end if
         
+        ! wall fully depleted
         if (z(wall%index + 1) .lt. wall%z_min) wall_z_initial =.true.
         
     end subroutine setup_wall
 
     subroutine setup_rock_layer
         ! setup z value onshore
-        where ((x .le. x(toe_crest_index)) .and. (z .le. z_rock)) z = z_rock
+        where ((x .le. x(toe_crest_index)) .and. (z .lt. z_rock)) z = z_rock
         if (rock.eq.1) call logger(3, 'rock layer enabled')
         z0_rock = z
         where(z_rock .gt. z) z0_rock = z_rock
@@ -233,7 +234,7 @@ module st_initialization
             end do
             ! interpolate new profile
             z = interp1_vec(x_tmp, x, z_tmp)
-            if (rock .ne. 1) then
+            if (rock .eq. 0) then
                 z_rock = z - 100.d0
             else
                 z_rock = interp1_vec(x_tmp, x, rock_tmp)
