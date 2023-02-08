@@ -34,7 +34,7 @@ module st_error_checking
 
             ! wall parameters
             if (wall%switch .eq. 1) then
-                call assert(eql(wall%x, nanr) .and. eql(wall%level,nanr), &
+                call assert(.not. eql(wall%x, nanr) .or. .not. eql(wall%level,nanr), &
                     'Wall switch is turned on' //&
                     ' but none of wall_x or wall_level are set.', 0)
             end if
