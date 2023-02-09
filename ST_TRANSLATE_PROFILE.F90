@@ -43,6 +43,8 @@ module st_translate_profile
         dv_upp = dv
         z_upp = z_final
         x_low = - min( toe_crest_index-1, n_pts-doc_index-1)
+
+        if (wall%switch.eq.1) x_low = max(x_low, 1 - wall%index)
         call get_profile(z_final, x_low)
         dv_low = dv
         z_low = z_final
