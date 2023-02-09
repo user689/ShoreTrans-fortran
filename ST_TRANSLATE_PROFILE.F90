@@ -15,7 +15,7 @@ module st_translate_profile
 
     implicit none
     integer :: xi
-    public :: translate_profile
+    public :: translate_profile, xi
 
 
 
