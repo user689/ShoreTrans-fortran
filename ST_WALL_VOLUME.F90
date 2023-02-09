@@ -68,9 +68,10 @@ module st_wall_volume
         if (wall%no_erode) then
             where((x.lt.x(wall%index)) .and. (z1 .lt. z)) z1 = z
         end if
-
+        
         if (wall%index + xi_tmp .le. 0) then
             call logger(0, 'cannot translate enough behind wall. increase onshore profile')
+            stop
         end if
 
         ! puts a cap on z_noWall at toe/crest level post-SLR
