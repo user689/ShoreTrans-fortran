@@ -31,17 +31,21 @@ module st_translate_profile
     subroutine translate_profile()
         implicit none
         real(kind=8), dimension(n_pts) :: z_low, z_upp, z_m
-        integer :: i, xm, x_upp, x_low, xi_est
-        real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr, f_sq
+        integer :: i,j, xm, x_upp, x_low, xi_est, x_prev
+        real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr, f_sq, dv_prev
         character(len=charlen) :: msg
 
         allocate(z_final(n_pts)) ! allocate space for the final profile
-        dv_est = nanr;
+        x_prev = nani
         ! upper and lower bounds
         x_upp = min(n_pts - doc_index -1, doc_index - 2 - toe_crest_index)
         call get_profile(z_final, x_upp)
         dv_upp = dv
         z_upp = z_final
+        call get_profile(z_final, x_upp -1)
+        write(msg, '(E8.1)') dv_upp/ (dv_upp - dv)
+        call logger(3, adj(msg))
+
         x_low = - min( toe_crest_index-1, n_pts-doc_index-1)
 
         if (wall%switch.eq.1) x_low = max(x_low, 1 - wall%index)
@@ -60,12 +64,17 @@ module st_translate_profile
         if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
             call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
                           'dvlow |   dvupp  |    dv    |')
-            do i=1,max_iter
+            outer: do i=1,max_iter
                 xm = nint(0.5d0 * (x_upp + x_low)) ! update estimate
                 if (i == 1) xm =xi_est  ! better initial guess
                 call get_profile(z_final, xm)
                 dv_m = dv ! get the function value at the new estimate
                 z_m = z_final
+                if (x_prev == nani) then
+                    x_prev = xm
+                    dv_prev = dv_m
+                end if
+
                 f_sq = sqrt(dv_m * dv_m - (dv_upp * dv_low))
                 if (eql(f_sq, 0.d0)) then
                     xi_est = xm
@@ -84,6 +93,20 @@ module st_translate_profile
                 dv_low, ' | ', dv_upp, ' | ', dv_est, ' |'
                 call logger(3, adj(msg))
 
+
+                if(abs(dv_prev) .lt. abs(dv_est)) then
+                    ! function is diverging !!
+                    do j=1, max_iter
+                        if (abs(xi_est - x_prev) .lt. 2) then
+                            xi_est = x_prev
+                            exit outer
+                        end if
+                        xi_est = nint((xi_est + x_prev)*0.5d0)
+                        call get_profile(z_final, xi_est)
+                        dv_est = dv
+                        if(abs(dv_est) .lt. abs(dv_prev)) exit
+                    end do                      
+                end if
                 ! convergence checks
                 if (eql(abs(dv_est), 0.d0)) then
                     exit ! converged to minimum
@@ -123,17 +146,20 @@ module st_translate_profile
                     ! this should never happen
                     call logger(0, 'Unkown error in main_loop (ST_TRANSLATE_PROFILE)')
                 end if
-            end do
+
+                x_prev = xi_est
+                dv_prev = dv_est
+            end do outer
             if (i .eq. max_iter) then
                 call logger(1, 'Maximum number of iterations reached')
                 call logger(1, 'Solution may not be the real minimum')
             end if
-        else if (eql(abs(dv_upp), 0.d0)) then
+        else if (eql(dv_upp, 0.d0)) then
             ! update upper bound
             xi_est = x_upp
             dv_est = dv_upp
             z_final = z_upp
-        else if (eql(abs(dv_low), 0.d0)) then
+        else if (eql(dv_low, 0.d0)) then
             ! update lower bound
             xi_est = x_low
             dv_est = dv_low
@@ -151,6 +177,60 @@ module st_translate_profile
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
 
+
+    ! !> @brief use the bisection method to reevaluate the estimate
+    ! !! @details fall back for when the ridders method diverges 
+    ! !! when there are multiple roots.
+    ! !! added 19/04/2023
+    ! subroutine bisection(xa, xb, dva, dvb, rootx, rootdv)
+    !     real(kind=8), intent(in) :: xa, xb, dva, dvb ! [a,b] interval
+    !     real(kind=8), intent(out) :: rootx, rootdv
+    !     real(kind=8) :: dvb, xc,dvc
+    !     integer :: i
+    !     call logger(3,'I |   xa   |   xb   |  dva |   dvb  |')
+    !     do i=1:max_iter
+    !         write (msg, '(I2,A,I8,A,I8,A,1PE8.1,A,E8.1,A)') &
+    !         i, ' | ', xa, ' | ', xb, ' | ', dva, ' | ', dva, ' | '
+    !         if (sign(1.d0, dvb * dva) .lt. 0.d0) then
+    !             ! solution can be found between the two values
+    !             xc = nint((xa + xb)/2)
+    !             call get_profile(z_final, xc)
+    !             dvc = dv
+    !             if(eql(dvc,0.d0)) then
+    !                 rootx = xc
+    !                 rootdv = dvc
+    !                 return
+    !             elseif(sign(1.d0, dva * dvc) .lt. 0.d0)
+    !                 xb = xc
+    !                 dvb = dvc
+    !             else
+    !                 if(abs(dvc).ge.abs(dva)) then
+    !                     rootx = xa
+    !                     rootdv = dva
+    !                     return
+    !                 else
+    !                     xa = xc
+    !                     dva = dvc
+    !                 end if
+    !             end if
+    !         else
+    !             xb = nint((xb+xa)/2)
+    !             call get_profile(z_final, xb)
+    !             dvb = dv
+    !         end if
+
+    !         if (abs(xa - xb) .lt. 2) then
+    !             if(abs(dvb) .gt. abs(dva)) then
+    !                 rootx = xa
+    !                 rootdv = dva
+    !             else
+    !                 rootx = xb
+    !                 rootdv = dvb
+    !             end if
+    !             return
+    !         end if
+    !         end do
+    ! end subroutine bisection
 
     !> @brief Estimate the shoreline recession
     !! @details Estimate the shoreline recession using the
