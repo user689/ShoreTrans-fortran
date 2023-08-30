@@ -38,6 +38,9 @@ module st_initialization
 
         allocate(z0_rock(n_pts))
 
+        call logger(3, 'Number of points in profile: ' // &
+        adj(num2str(n_pts)))
+
         call setup_toe_crest ! setup the values of toe_crest & index
         call setup_doc ! setup doc level
         call setup_rock_layer ! rock layer
@@ -66,15 +69,22 @@ module st_initialization
     subroutine setup_wall
         integer, dimension(n_pts) :: tmp_array
         if (wall%switch .eq. 0) return
+        call logger(3, "Seawall is on")
         if (eql(wall%x, nanr)) then ! no wall_x, use wall_level
             tmp_array = 1
             where(z.ge.wall%level) tmp_array = 0
             wall%index = n_pts - minloc(tmp_array(n_pts:1:-1), 1) + 1
             wall%x = x(wall%index)
+            call logger(3, 'wall level is ' // adj(num2str(wall%level)))
+            call logger(3, 'wall index is ' // adj(num2str(wall%x)))
         else
             ! wall_x is set directly
             wall%index = minloc(abs(x - wall%x), 1)
-            wall%level = z(wall%index)
+            wall%level = z(wall%index)            
+            
+            call logger(3, 'wall index is ' // adj(num2str(wall%x)))
+            call logger(3, 'wall level is ' // adj(num2str(wall%level)))
+
         end if
         
         ! wall fully depleted
@@ -118,6 +128,8 @@ module st_initialization
                        adj(num2str(toe_crest_index)))
         else if (eql(toe_crest,nanr)) then
             toe_crest = z(toe_crest_index)
+            call logger(3, 'toe/crest index: ' // &
+            adj(num2str(toe_crest_index)))
             call logger(3, 'setting toe/crest value: ' // &
                        adj(num2str(toe_crest)))
         end if
