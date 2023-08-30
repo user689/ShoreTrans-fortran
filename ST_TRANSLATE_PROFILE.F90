@@ -15,6 +15,7 @@ module st_translate_profile
 
     implicit none
     integer :: xi
+    real(kind=8), allocatable :: dv_tmp(:)
     public :: translate_profile, xi
 
 
@@ -22,215 +23,261 @@ module st_translate_profile
     private
     contains
 
-    !> @brief main loop of the program
-    !! @details main optimization loop of the program \n
-    !! uses the ridders method to find the minimum of the function \n
-    !! convergence should be reached in a max of O(sqrt(n)) steps. \n
-    !! where n is the number of points in the profile \n
-    !! @return the new profile
     subroutine translate_profile()
-        implicit none
-        real(kind=8), dimension(n_pts) :: z_low, z_upp, z_m
-        integer :: i,j, xm, x_upp, x_low, xi_est, x_prev
-        real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr, f_sq, dv_prev
+        
+        integer :: i, x_upp, x_low, xi_est, step, x_tmp
+        real(kind=8) :: grad_f, dv_est, dv_plus, dv_minus     
         character(len=charlen) :: msg
+        allocate(z_final(n_pts))
+        ! get the upper and lower bounds
 
-        allocate(z_final(n_pts)) ! allocate space for the final profile
-        x_prev = nani
-        ! upper and lower bounds
+        if(xi_test.ne.nani) then
+            print *, 'using xi=', xi_test
+            xi = xi_test
+            call get_profile(z_final, xi)
+            call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
+            return
+        end if
         x_upp = min(n_pts - doc_index -1, doc_index - 2 - toe_crest_index)
-        call get_profile(z_final, x_upp)
-        dv_upp = dv
-        z_upp = z_final
-        call get_profile(z_final, x_upp -1)
-        write(msg, '(E8.1)') dv_upp/ (dv_upp - dv)
-        call logger(3, adj(msg))
-
         x_low = - min( toe_crest_index-1, n_pts-doc_index-1)
-
+        if(x_low .gt. x_upp) then
+            print *, 'switching'
+            x_tmp = x_low
+            x_low = x_upp
+            x_upp = x_tmp
+        end if
+        print *, 'xupp = ', x_upp, 'xlow', x_low
         if (wall%switch.eq.1) x_low = max(x_low, 1 - wall%index)
-        call get_profile(z_final, x_low)
-        dv_low = dv
-        z_low = z_final
-        xi_est = bruun_estimate() ! bruun estimate
-        if (xi_est.lt.x_low.or.xi_est.gt.x_upp) then ! check in case bruun estimate is outside of interval
+        allocate(dv_tmp(x_low:x_upp))
+        dv_tmp = nanr
+        xi_est = bruun_estimate() ! calculate the bruun rule estimate
+
+        if (xi_est.lt.min(x_low, x_upp).or.xi_est.gt.max(x_upp, x_low)) then 
+            ! check in case bruun estimate is outside of interval
+            print *, 'Xi_est outside interval'
             xi_est = nint(0.5d0 * (x_upp + x_low))
         end if
-        write(msg, '(A,I8,A,E8.1)') 'xupp = ', x_upp, ' dv_upp =', dv_upp
-        call logger(3, adj(msg))
-        write(msg, '(A,I8,A,E8.1)') 'xlow = ', x_low, ' dv_low =', dv_low
-        call logger(3, adj(msg))
-
-        if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
-            call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
-                          'dvlow |   dvupp  |    dv    |')
-            outer: do i=1,max_iter
-                xm = nint(0.5d0 * (x_upp + x_low)) ! update estimate
-                if (i == 1) xm =xi_est  ! better initial guess
-                call get_profile(z_final, xm)
-                dv_m = dv ! get the function value at the new estimate
-                z_m = z_final
-                if (x_prev == nani) then
-                    x_prev = xm
-                    dv_prev = dv_m
-                end if
-
-                f_sq = sqrt(dv_m * dv_m - (dv_upp * dv_low))
-                if (eql(f_sq, 0.d0)) then
-                    xi_est = xm
-                    dv_est = dv_m
-                    exit ! converged to exact minimum
-                end if
-                ! apply the false position method
-                x_curr = (xm - x_low) * dv_m / f_sq
-                x_curr= xm + sign(1.d0, dv_low - dv_upp) * x_curr
-                ! round into the new interval (faster convergence)
-                xi_est = NINT(x_curr + 0.5 * SIGN(1.d0, xm - x_curr))
-                call get_profile(z_final, xi_est) ! apply the new estimate
-                dv_est = dv
-                write (msg, '(I2,A,I8,A,I8,A,I8,A,1PE8.1,A,E8.1,A,E8.1,A)') &
-                i, ' | ', x_low, ' | ', x_upp, ' | ', xi_est, ' | ', &
-                dv_low, ' | ', dv_upp, ' | ', dv_est, ' |'
-                call logger(3, adj(msg))
-
-
-                if(abs(dv_prev) .lt. abs(dv_est)) then
-                    ! function is diverging !!
-                    do j=1, max_iter
-                        if (abs(xi_est - x_prev) .lt. 2) then
-                            xi_est = x_prev
-                            exit outer
-                        end if
-                        xi_est = nint((xi_est + x_prev)*0.5d0)
-                        call get_profile(z_final, xi_est)
-                        dv_est = dv
-                        if(abs(dv_est) .lt. abs(dv_prev)) exit
-                    end do                      
-                end if
-                ! convergence checks
-                if (eql(abs(dv_est), 0.d0)) then
-                    exit ! converged to minimum
-                else if (abs(x_low - x_upp) .lt. 2) then
-                    if(abs(dv_low) .gt. abs(dv_upp)) then
-                        xi_est = x_upp
-                        dv_est = dv_upp
-                        z_final = z_upp
-                    else
-                        xi_est = x_low
-                        dv_est = dv_low
-                        z_final = z_low
-                    end if
-                    exit ! found solution
-                end if
-
-                ! update the bounds
-                if (sign(1.d0, dv_m * dv_est) .lt. 0) then
-                   IF(xm .LT. xi_est) THEN
-                    x_low = xm; dv_low = dv_m
-                    z_low = z_m; x_upp = xi_est
-                    dv_upp = dv_est; z_upp = z_final
-                   ELSE
-                    x_low = xi_est; dv_low = dv_est
-                    z_low = z_final; x_upp = xm
-                    dv_upp = dv_m; z_upp = z_m
-                   END IF
-                else if (sign(1.d0, dv_low * dv_est) .lt. 0) then
-                    x_upp = xi_est
-                    dv_upp = dv_est
-                    z_low = z_final
-                else if (sign(1.d0, dv_upp * dv_est) .lt. 0) then
-                    x_low = xi_est
-                    dv_low = dv_est
-                    z_upp = z_final
-                else
-                    ! this should never happen
-                    call logger(0, 'Unkown error in main_loop (ST_TRANSLATE_PROFILE)')
-                end if
-
-                x_prev = xi_est
-                dv_prev = dv_est
-            end do outer
-            if (i .eq. max_iter) then
-                call logger(1, 'Maximum number of iterations reached')
-                call logger(1, 'Solution may not be the real minimum')
+        do i=1,max_iter
+            print *, 'xi_est', xi_est
+            if(xi_est .lt. min(x_low, x_upp) ) then
+                xi_est = min(x_low, x_upp) - sign(2, min(x_low, x_upp));
+                print *, 'new_xi low', xi_est
+            else if(xi_est .ge. max(x_upp,x_low)) then
+                xi_est = max(x_low, x_upp) -sign(2, max(x_low, x_upp));
+                print *, 'new_xi upp', xi_est
             end if
-        else if (eql(dv_upp, 0.d0)) then
-            ! update upper bound
-            xi_est = x_upp
-            dv_est = dv_upp
-            z_final = z_upp
-        else if (eql(dv_low, 0.d0)) then
-            ! update lower bound
-            xi_est = x_low
-            dv_est = dv_low
-            z_final = z_low
-        else
-            ! no solution can be found
-            ! TODO: think how can we make this work for all situations
-            ! e.g: no DoC (lagoons), incomplete profiles
-            call logger(0, 'No solution can be found. Please check the profile')
-            STOP
-        end if
-        xi = xi_est
+
+            if (dv_tmp(xi_est).ne. nanr) then ! we already have a value xi_est
+                xi_est = minloc(abs(dv_tmp),1 , dv_tmp /= nanr) + x_low-1
+                exit
+            end if 
+
+            dv_est = evaluate_f(xi_est)
+            if (eql(dv_est,0.d0)) exit
+
+            dv_plus = evaluate_f(xi_est +1)
+            if (eql(dv_plus,0.d0)) then
+                xi_est = xi_est +1
+                exit
+            end if 
+
+            dv_minus = evaluate_f(xi_est -1)
+            if (eql(dv_minus,0.d0)) then
+                xi_est = xi_est -1
+                exit
+            end if 
+
+            ! calculate the gradient at this point
+            grad_f = (dv_plus - dv_minus) /2.d0
+            print *, grad_f
+            if (eql(grad_f,0.d0)) exit
+
+            ! calculate the new estimate
+            step = nint(dv_est/grad_f)
+            if (step.eq.0) exit
+            xi_est = xi_est - step
+        end do
+        xi =xi_est
         call get_profile(z_final, xi_est)
-        call logger(2, 'Final xi: ' // adj(num2str(xi *dx)) // ' m ('// adj(num2str(xi)) //')')
+        write(msg, *) 'Final xi:', xi *dx, ' m (',xi, ')' 
+        call logger(2, msg)
         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
     end subroutine translate_profile
 
 
-    ! !> @brief use the bisection method to reevaluate the estimate
-    ! !! @details fall back for when the ridders method diverges 
-    ! !! when there are multiple roots.
-    ! !! added 19/04/2023
-    ! subroutine bisection(xa, xb, dva, dvb, rootx, rootdv)
-    !     real(kind=8), intent(in) :: xa, xb, dva, dvb ! [a,b] interval
-    !     real(kind=8), intent(out) :: rootx, rootdv
-    !     real(kind=8) :: dvb, xc,dvc
-    !     integer :: i
-    !     call logger(3,'I |   xa   |   xb   |  dva |   dvb  |')
-    !     do i=1:max_iter
-    !         write (msg, '(I2,A,I8,A,I8,A,1PE8.1,A,E8.1,A)') &
-    !         i, ' | ', xa, ' | ', xb, ' | ', dva, ' | ', dva, ' | '
-    !         if (sign(1.d0, dvb * dva) .lt. 0.d0) then
-    !             ! solution can be found between the two values
-    !             xc = nint((xa + xb)/2)
-    !             call get_profile(z_final, xc)
-    !             dvc = dv
-    !             if(eql(dvc,0.d0)) then
-    !                 rootx = xc
-    !                 rootdv = dvc
-    !                 return
-    !             elseif(sign(1.d0, dva * dvc) .lt. 0.d0)
-    !                 xb = xc
-    !                 dvb = dvc
-    !             else
-    !                 if(abs(dvc).ge.abs(dva)) then
-    !                     rootx = xa
-    !                     rootdv = dva
-    !                     return
-    !                 else
-    !                     xa = xc
-    !                     dva = dvc
-    !                 end if
-    !             end if
-    !         else
-    !             xb = nint((xb+xa)/2)
-    !             call get_profile(z_final, xb)
-    !             dvb = dv
-    !         end if
+    function evaluate_f(xi_est)
+        integer, intent(in) :: xi_est
+        real(kind=8) :: evaluate_f
+        character(len=charlen) :: msg
+        if (eql( dv_tmp(xi_est), nanr)) then 
+            call get_profile(z_final, xi_est)
+            dv_tmp(xi_est) = dv
+            evaluate_f = dv
+        else
+            evaluate_f = dv_tmp(xi_est)
+        end if
+        write(msg, *) 'xi = ', xi_est, 'error = ', evaluate_f
+        call logger(3, adj(msg) ) 
+    end function evaluate_f
 
-    !         if (abs(xa - xb) .lt. 2) then
-    !             if(abs(dvb) .gt. abs(dva)) then
-    !                 rootx = xa
-    !                 rootdv = dva
-    !             else
-    !                 rootx = xb
-    !                 rootdv = dvb
+    ! !> @brief main loop of the program
+    ! !! @details main optimization loop of the program \n
+    ! !! uses the ridders method to find the minimum of the function \n
+    ! !! convergence should be reached in a max of O(sqrt(n)) steps. \n
+    ! !! where n is the number of points in the profile \n
+    ! !! @return the new profile
+    ! subroutine translate_profile()
+    !     implicit none
+    !     real(kind=8), dimension(n_pts) :: z_low, z_upp, z_m
+    !     integer :: i,j, xm, x_upp, x_low, xi_est, x_prev
+    !     real(kind=8) :: dv_m, dv_upp, dv_low, dv_est, x_curr, f_sq, dv_prev
+    !     character(len=charlen) :: msg
+
+    !     allocate(z_final(n_pts)) ! allocate space for the final profile
+    !     x_prev = nani
+    !     ! upper and lower bounds
+    !     x_upp = min(n_pts - doc_index -1, doc_index - 2 - toe_crest_index)
+    !     call get_profile(z_final, x_upp)
+    !     dv_upp = dv
+    !     z_upp = z_final
+    !     call get_profile(z_final, x_upp -1)
+    !     write(msg, '(E8.1)') dv_upp/ (dv_upp - dv)
+    !     call logger(3, adj(msg))
+
+    !     x_low = - min( toe_crest_index-1, n_pts-doc_index-1)
+
+    !     if (wall%switch.eq.1) x_low = max(x_low, 1 - wall%index)
+    !     call get_profile(z_final, x_low)
+    !     dv_low = dv
+    !     z_low = z_final
+    !     xi_est = bruun_estimate() ! bruun estimate
+    !     if (xi_est.lt.x_low.or.xi_est.gt.x_upp) then ! check in case bruun estimate is outside of interval
+    !         xi_est = nint(0.5d0 * (x_upp + x_low))
+    !     end if
+    !     write(msg, '(A,I8,A,E8.1)') 'xupp = ', x_upp, ' dv_upp =', dv_upp
+    !     call logger(3, adj(msg))
+    !     write(msg, '(A,I8,A,E8.1)') 'xlow = ', x_low, ' dv_low =', dv_low
+    !     call logger(3, adj(msg))
+
+    !     if (sign(1.d0, dv_upp * dv_low) .lt. 0.d0) then
+    !         call logger(3,'I |   xlow   |   xupp   |   xest   |    ' //&
+    !                       'dvlow |   dvupp  |    dv    |')
+    !         outer: do i=1,max_iter
+    !             xm = nint(0.5d0 * (x_upp + x_low)) ! update estimate
+    !             if (i == 1) xm =xi_est  ! better initial guess
+    !             call get_profile(z_final, xm)
+    !             dv_m = dv ! get the function value at the new estimate
+    !             z_m = z_final
+    !             if (x_prev == nani) then
+    !                 x_prev = xm
+    !                 dv_prev = dv_m
     !             end if
-    !             return
+
+    !             f_sq = sqrt(dv_m * dv_m - (dv_upp * dv_low))
+    !             if (eql(f_sq, 0.d0)) then
+    !                 xi_est = xm
+    !                 dv_est = dv_m
+    !                 exit ! converged to exact minimum
+    !             end if
+    !             ! apply the false position method
+    !             x_curr = (xm - x_low) * dv_m / f_sq
+    !             x_curr= xm + sign(1.d0, dv_low - dv_upp) * x_curr
+    !             ! round into the new interval (faster convergence)
+    !             xi_est = NINT(x_curr + 0.5 * SIGN(1.d0, xm - x_curr))
+    !             call get_profile(z_final, xi_est) ! apply the new estimate
+    !             dv_est = dv
+    !             write (msg, '(I2,A,I8,A,I8,A,I8,A,1PE8.1,A,E8.1,A,E8.1,A)') &
+    !             i, ' | ', x_low, ' | ', x_upp, ' | ', xi_est, ' | ', &
+    !             dv_low, ' | ', dv_upp, ' | ', dv_est, ' |'
+    !             call logger(3, adj(msg))
+
+
+    !             if((abs(dv_prev) .lt. abs(dv_est)).and. & 
+    !                 sign(1.d0, dv_prev) .eq. sign(1.d0, dv_est)) then
+    !                 ! function is diverging !!
+    !                 print *, 'Function is diverging!!!!!'
+    !                 do j=1, max_iter
+    !                     if (abs(xi_est - x_prev) .lt. 2) then
+    !                         xi_est = x_prev
+    !                         exit outer
+    !                     end if
+    !                     xi_est = nint((xi_est + x_prev)*0.5d0)
+    !                     call get_profile(z_final, xi_est)
+    !                     dv_est = dv
+    !                     if(abs(dv_est) .lt. abs(dv_prev)) exit
+    !                 end do                      
+    !             end if
+    !             ! convergence checks
+    !             if (eql(abs(dv_est), 0.d0)) then
+    !                 exit ! converged to minimum
+    !             else if (abs(x_low - x_upp) .lt. 2) then
+    !                 if(abs(dv_low) .gt. abs(dv_upp)) then
+    !                     xi_est = x_upp
+    !                     dv_est = dv_upp
+    !                     z_final = z_upp
+    !                 else
+    !                     xi_est = x_low
+    !                     dv_est = dv_low
+    !                     z_final = z_low
+    !                 end if
+    !                 exit ! found solution
+    !             end if
+
+    !             ! update the bounds
+    !             if (sign(1.d0, dv_m * dv_est) .lt. 0) then
+    !                IF(xm .LT. xi_est) THEN
+    !                 x_low = xm; dv_low = dv_m
+    !                 z_low = z_m; x_upp = xi_est
+    !                 dv_upp = dv_est; z_upp = z_final
+    !                ELSE
+    !                 x_low = xi_est; dv_low = dv_est
+    !                 z_low = z_final; x_upp = xm
+    !                 dv_upp = dv_m; z_upp = z_m
+    !                END IF
+    !             else if (sign(1.d0, dv_low * dv_est) .lt. 0) then
+    !                 x_upp = xi_est
+    !                 dv_upp = dv_est
+    !                 z_low = z_final
+    !             else if (sign(1.d0, dv_upp * dv_est) .lt. 0) then
+    !                 x_low = xi_est
+    !                 dv_low = dv_est
+    !                 z_upp = z_final
+    !             else
+    !                 ! this should never happen
+    !                 call logger(0, 'Unkown error in main_loop (ST_TRANSLATE_PROFILE)')
+    !             end if
+
+    !             x_prev = xi_est
+    !             dv_prev = dv_est
+    !         end do outer
+    !         if (i .eq. max_iter) then
+    !             call logger(1, 'Maximum number of iterations reached')
+    !             call logger(1, 'Solution may not be the real minimum')
     !         end if
-    !         end do
-    ! end subroutine bisection
+    !     else if (eql(dv_upp, 0.d0)) then
+    !         ! update upper bound
+    !         xi_est = x_upp
+    !         dv_est = dv_upp
+    !         z_final = z_upp
+    !     else if (eql(dv_low, 0.d0)) then
+    !         ! update lower bound
+    !         xi_est = x_low
+    !         dv_est = dv_low
+    !         z_final = z_low
+    !     else
+    !         ! no solution can be found
+    !         ! TODO: think how can we make this work for all situations
+    !         ! e.g: no DoC (lagoons), incomplete profiles
+    !         call logger(0, 'No solution can be found. Please check the profile')
+    !         STOP
+    !     end if
+    !     xi = xi_est
+    !     call get_profile(z_final, xi_est)
+    !     call logger(2, 'Final xi: ' // adj(num2str(xi *dx)) // ' m ('// adj(num2str(xi)) //')')
+    !     call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
+    !     print *, 'Final xi: ' , adj(num2str(xi *dx)) , ' m ('// adj(num2str(xi)) ,')'
+    ! end subroutine translate_profile
+
 
     !> @brief Estimate the shoreline recession
     !! @details Estimate the shoreline recession using the
