@@ -77,6 +77,8 @@ module st_defaults
     !! -1 = no output
     integer :: verbose = 2
 
+    integer :: xi_test = nani
+
     ! initial variables
     real(kind=8) :: h  !< height of active profile
     real(kind=8) :: w  !< width of active profile

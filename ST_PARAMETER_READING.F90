@@ -111,6 +111,8 @@ module st_parameter_reading
           read (line, *, iostat=ios) wall%x
           case ('wall_level')
           read (line, *, iostat=ios) wall%level
+          case ('xi_test')
+          read (line, *, iostat=ios) xi_test
           case ('') ! skip empty lines
           case default
               call logger(1, 'unknown parameter ' // &
