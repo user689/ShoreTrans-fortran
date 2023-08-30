@@ -216,7 +216,9 @@ module st_helper
             end if
 #endif
             !write(fid_log, '(A)', advance='no') time_str
+            print *, adj(msg)
             select case(priority)
+                
                 case(0)
                     write(fid_log, *) 'ERROR: ', adj(msg)
                     print *, 'ERROR: ', adj(msg)
