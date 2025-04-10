@@ -1,15 +1,18 @@
-# Compiler & flags
+# Compiler and flags
 FC = gfortran
 FFLAGS = -Wall -Wextra -fdefault-integer-8 -fimplicit-none -fall-intrinsics -O2 -std=f2008 \
-		 -fbounds-check -ffpe-trap='invalid','zero','overflow','underflow','denormal' \
-		 -cpp -DSTANDALONE
+         -fbounds-check -ffpe-trap='invalid','zero','overflow','underflow','denormal' \
+         -cpp -DSTANDALONE -Jbuild
 
 # Directories
 SRC_DIR = src
 OBJ_DIR = build
 BIN_DIR = bin
 
-# Explicitly ordered source files (important for module dependencies!)
+# Executable (no .exe suffix unless you really need it)
+SHORETRANS_EXE = $(BIN_DIR)/shoretrans
+
+# Explicitly ordered source files (Fortran modules must be compiled in correct order)
 SRC = \
 	$(SRC_DIR)/ST_DEFAULTS.F90 \
 	$(SRC_DIR)/ST_HELPER.F90 \
@@ -21,42 +24,33 @@ SRC = \
 	$(SRC_DIR)/ST_TRANSLATE_PROFILE.F90 \
 	$(SRC_DIR)/ST_MAIN.F90
 
-# Object files
+# Map .F90 ? build/*.o
 OBJ = $(patsubst $(SRC_DIR)/%.F90, $(OBJ_DIR)/%.o, $(SRC))
 
-# Final executable path
-SHORETRANS_EXE = $(BIN_DIR)/shoretrans.exe
+# Default target
+all: exe
 
-# Detect OS
-ifdef OS
-	RM = @del /f
-	MKDIR = @mkdir
-else
-	RM = @rm -f
-	MKDIR = @mkdir -p
-endif
-
-# Prevent deletion of intermediate files
-.SECONDARY:
-
-# Compile rule: src/%.F90 ? build/%.o
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90 | $(OBJ_DIR)
-	$(FC) $(FFLAGS) -c $< -o $@
-
-# Link final executable
+# Link executable
 $(SHORETRANS_EXE): $(OBJ) | $(BIN_DIR)
 	$(FC) $(FFLAGS) -o $@ $(OBJ)
 
-# Default target
-exe: $(SHORETRANS_EXE)
+# Compile each .F90 to build/*.o
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90 | $(OBJ_DIR)
+	$(FC) $(FFLAGS) -c $< -o $@
 
-# Create build/ and bin/ directories if they don't exist
+# Create build and bin directories if missing
 $(OBJ_DIR):
-	$(MKDIR) $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)
 
 $(BIN_DIR):
-	$(MKDIR) $(BIN_DIR)
+	mkdir -p $(BIN_DIR)
 
-# Clean rule
+# Public target
+exe: $(SHORETRANS_EXE)
+
+# Cleanup
 clean:
-	$(RM) $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(SHORETRANS_EXE)
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(SHORETRANS_EXE)
+
+# Declare targets as phony to avoid accidental collisions
+.PHONY: all exe clean $(OBJ_DIR) $(BIN_DIR)
