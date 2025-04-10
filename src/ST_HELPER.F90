@@ -249,21 +249,28 @@ contains
    !! if no directory name is provided, use the current directory \n
    !> @return directory name
    subroutine get_dirname()
+      use iso_fortran_env
       implicit none
       integer :: num_args, err
-
+      character(len=1024) :: temp_dir
       num_args = command_argument_count()
 
-      if (num_args .eq. 0) then ! use current directory
-         call getcwd(dir_name, err)
-         if (err .ne. 0) then
-            print *, "FATAL ERROR: Can't get current directory"
-            stop ! we don't have the right permissions
+      if (num_args == 0) then
+         ! Try to get directory from environment variable PWD
+         call get_environment_variable("PWD", temp_dir, status=err)
+
+         if (err /= 0) then
+            print *, "FATAL ERROR: Can't get current directory (PWD not set)"
+            stop
          end if
+
+         dir_name = trim(temp_dir)
+
       else
-         call get_command_argument(1, dir_name) ! get directory name
+         call get_command_argument(1, dir_name)
       end if
    end subroutine get_dirname
+
 
    !
    ! END SECTION: string manipulation and file handling

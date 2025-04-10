@@ -1,6 +1,6 @@
 # Compiler and flags
 FC = gfortran
-FFLAGS = -Wall -Wextra -fdefault-integer-8 -fimplicit-none -fall-intrinsics -O2 -std=f2008 \
+FFLAGS = -Wall -Wextra -fdefault-integer-8 -fimplicit-none -O2 -std=f2008 \
          -fbounds-check -ffpe-trap='invalid','zero','overflow','underflow','denormal' \
          -cpp -DSTANDALONE -Jbuild
 
