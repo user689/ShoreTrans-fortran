@@ -1,8 +1,24 @@
 # Compiler and flags
 FC = gfortran
-FFLAGS = -Wall -Wextra -fdefault-integer-8 -fimplicit-none -O2 -std=f2008 \
-         -fbounds-check -ffpe-trap='invalid','zero','overflow','underflow','denormal' \
-         -cpp -DSTANDALONE -Jbuild
+
+# Default flags (can be overridden)
+FFLAGS_RELEASE = -O3 -march=native -Wall -Wextra \
+                 -fimplicit-none -std=f2008 \
+                 -cpp -DSTANDALONE -J$(OBJ_DIR)
+
+FFLAGS_DEBUG = -O0 -g -Wall -Wextra -Wconversion \
+               -fdefault-integer-8 -fimplicit-none -std=f2008 \
+               -fbounds-check -fcheck=all \
+               -ffpe-trap='invalid','zero','overflow','underflow','denormal' \
+               -cpp -DSTANDALONE -J$(OBJ_DIR)
+
+BUILD ?= release
+
+ifeq ($(BUILD),debug)
+  FFLAGS = $(FFLAGS_DEBUG)
+else
+  FFLAGS = $(FFLAGS_RELEASE)
+endif
 
 # Directories
 SRC_DIR = src
@@ -24,11 +40,19 @@ SRC = \
 	$(SRC_DIR)/ST_TRANSLATE_PROFILE.F90 \
 	$(SRC_DIR)/ST_MAIN.F90
 
-# Map .F90 ? build/*.o
+# Map .F90 -> build/*.o
 OBJ = $(patsubst $(SRC_DIR)/%.F90, $(OBJ_DIR)/%.o, $(SRC))
 
 # Default target
-all: exe
+.DEFAULT_GOAL := help
+
+# Help command
+help:
+	@echo "Usage: make [target] [BUILD=release|debug]"
+	@echo "Targets:"
+	@echo "  help     Show this help message"
+	@echo "  exe      Build the executable (default BUILD=release)"
+	@echo "  clean    Remove build artifacts"
 
 # Link executable
 $(SHORETRANS_EXE): $(OBJ) | $(BIN_DIR)
@@ -53,4 +77,4 @@ clean:
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(SHORETRANS_EXE)
 
 # Declare targets as phony to avoid accidental collisions
-.PHONY: all exe clean $(OBJ_DIR) $(BIN_DIR)
+.PHONY: all exe clean help $(OBJ_DIR) $(BIN_DIR)
