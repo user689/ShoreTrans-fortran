@@ -1,0 +1,34 @@
+# Compiled object files
+*.o
+*.mod
+*.exe
+*.out
+*.a
+*.so
+*.dll
+
+# Executable
+shoretrans
+shoretrans.exe
+
+# Build and binary directories
+build/
+bin/
+
+# Debug and log files
+*.log
+*.trace
+*.core
+
+# OS-specific trash
+.DS_Store
+Thumbs.db
+
+# Backup/swap files
+*~
+*.swp
+*.bak
+
+# VS Code or other editor configs
+.vscode/
+.idea/
