@@ -121,7 +121,7 @@ contains
 
       out_name_tmp = adj(dir_name) &
          // '/outputs/' // adj(out_name)
-      if (present(arr2_)) then
+      if (present(arr2_).and. allocated(arr2)) then
          allocate(arr2(size(arr2_)))
          arr2 = arr2_
       end if
@@ -137,7 +137,7 @@ contains
          stop
       end if
       ! write the array
-      if (present(arr2_)) then
+      if (present(arr2_) .and. allocated(arr2)) then
          do i = 1, size(arr,1)
             write(fid_write, '(F0.4, A, F0.4)') arr(i), ' ', arr2(i)
          end do
@@ -249,7 +249,6 @@ contains
    !! if no directory name is provided, use the current directory \n
    !> @return directory name
    subroutine get_dirname()
-      use iso_fortran_env
       implicit none
       integer :: num_args, err
       character(len=1024) :: temp_dir

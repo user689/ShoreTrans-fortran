@@ -67,8 +67,9 @@ contains
             print *, 'new_xi upp', xi_est
          end if
 
-         if (dv_tmp(xi_est).ne. nanr) then ! we already have a value xi_est
-            xi_est = minloc(abs(dv_tmp),1 , dv_tmp /= nanr) + x_low-1
+         if (abs(dv_tmp(xi_est) - nanr) > 1.0d-8) then ! we already have a value xi_est
+            ! Find the minimum value among already calculated points
+            xi_est = minloc(abs(dv_tmp), 1, abs(dv_tmp - nanr) > 1.0d-8) + x_low - 1
             exit
          end if
 
