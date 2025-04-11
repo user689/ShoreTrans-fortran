@@ -3,7 +3,7 @@ FC = gfortran
 
 # Default flags (can be overridden)
 FFLAGS_RELEASE = -O3 -march=native -Wall -Wextra \
-                 -fimplicit-none -std=f2008 \
+                 -fdefault-integer-8 -fimplicit-none -std=f2008 \
                  -cpp -DSTANDALONE -J$(OBJ_DIR)
 
 FFLAGS_DEBUG = -O0 -g -Wall -Wextra -Wconversion \
