@@ -38,8 +38,10 @@ Special thanks to [Jak McCarroll](mailto:jak.mccarroll@unimelb.edu.au) for the o
     +-- src/ # Fortran source files 
     +-- bin/ # Final compiled executable (created by Makefile) 
     +-- build/ # Object and module files 
+    +-- tutorials/ # tutorial files
     +-- Makefile # Build instructions 
     +-- README.md # You are here
+    +-- LICENSE
 
 
 ---
