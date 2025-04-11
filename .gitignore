@@ -20,7 +20,9 @@ tutorials/**
 
 # But keep Jupyter notebooks
 !tutorials/**/*.ipynb
-
+# And allow any 'data' folder and its contents
+!tutorials/**/data/
+!tutorials/**/data/**
 
 # Debug and log files
 *.log
