@@ -15,6 +15,13 @@ shoretrans.exe
 build/
 bin/
 
+# Ignore everything in the tutorials directory
+tutorials/**
+
+# But keep Jupyter notebooks
+!tutorials/**/*.ipynb
+
+
 # Debug and log files
 *.log
 *.trace
