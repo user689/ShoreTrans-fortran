@@ -251,10 +251,6 @@ contains
          else
             z_rock = interp1_vec(x_tmp, x, rock_tmp)
          end if
-         ! update the value of the toe_crest_index if needed
-         if (toe_crest_index.NE.nani) then
-            toe_crest_index = nint(toe_crest_index * dx_tmp/dx)
-         end if
       end if
       deallocate(x_tmp,z_tmp,rock_tmp)
    end subroutine initialize_profile
