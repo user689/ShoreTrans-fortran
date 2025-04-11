@@ -16,13 +16,17 @@ build/
 bin/
 
 # Ignore everything in the tutorials directory
+
 tutorials/**
 
 # But keep Jupyter notebooks
+!tutorials/
+!tutorials/01_basic
+!tutorials/02_translation_types
 !tutorials/**/*.ipynb
 # And allow any 'data' folder and its contents
-!tutorials/**/data/
-!tutorials/**/data/**
+!tutorials/data/
+!tutorials/data/**
 
 # Debug and log files
 *.log
