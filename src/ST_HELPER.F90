@@ -197,7 +197,6 @@ contains
             print *, 'ERROR: could not open log file: '
             print *, '>> ' ,  log_file_tmp
             print *, '>>  ', iomsg
-            stop
          end if
          write(fid_log, *) 'Log file created at: ', &
             date_str , ' ' , time_str
@@ -212,7 +211,6 @@ contains
             print *, 'ERROR: could not open log file: '
             print *, '>> ', log_file_tmp
             print *, '>>  ', iomsg
-            stop
          end if
 #endif
          !write(fid_log, '(A)', advance='no') time_str

@@ -36,5 +36,4 @@ program shoretrans
    write(msg, "(A, F10.3, A)") "Program finished in ", end_time, &
       " seconds."
    call logger(-1, adj(msg))
-   print *, adj(msg)
 end program shoretrans
