@@ -1,6 +1,8 @@
 # ShoreTrans (Fortran Version)
 
-This repository contains a Fortran translation of the original [ShoreTrans model](https://github.com/jakmccarroll/ShoreTrans), developed by [McCarroll et al. (2021)](https://doi.org/10.1016/j.margeo.2021.106466). The original MATLAB model simulates long-term (10-100 years) coastal change in response to sea level rise and sediment supply, accounting for sediment budgeting, shoreface translation, and multiple real-world coastal constraints.
+This repository contains a Fortran translation of the original [ShoreTrans model](https://github.com/jakmccarroll/ShoreTrans), developed by [McCarroll et al. (2021)](https://doi.org/10.1016/j.margeo.2021.106466). The original MATLAB model simulates long-term (10-100 years) coastal change in response to sea level rise and sediment supply, accounting for sediment budgeting, shoreface translation, and multiple real-world coastal constraints. This version includes all main features but does not include some developments found in the original version (e.g storm demand, dune growth). 
+
+The work was done as part of my Master/PhD work within a collaboration between BRGM and EPOC.
 
 ---
 
