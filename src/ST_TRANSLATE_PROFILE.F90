@@ -59,7 +59,7 @@ contains
          xi_est = nint(0.5d0 * (x_upp + x_low))
       end if
       do i=1,max_iter
-         write(msg, '(A,I8,A)') 'Iteration ', i, ': xi_est = ', xi_est, ' grid points'
+         write(msg, '(A,I8,A,I8,A)') 'Iteration ', i, ': xi_est = ', xi_est, ' grid points'
          call logger(4, adj(msg))
          if(xi_est .lt. min(x_low, x_upp) ) then
          xi_est = min(x_low, x_upp) - sign(2, min(x_low, x_upp));
@@ -100,7 +100,7 @@ contains
 
          ! calculate the gradient at this point
          grad_f = (dv_plus - dv_minus) /2.d0
-         write(msg, '(A,E12.5,A)') 'Volume error gradient = ', grad_f, ' m³/grid point'
+         write(msg, '(A,E12.5,A)') 'Volume error gradient = ', grad_f, ' m3/grid point'
          call logger(4, adj(msg))
          if (eql(grad_f,0.d0)) then
             call logger(4, 'Zero gradient detected, no further improvement possible')
