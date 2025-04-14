@@ -32,21 +32,21 @@ contains
       ! get the upper and lower bounds
 
       if(xi_test.ne.nani) then
-         call logger(2, 'using xi=' // adj(num2str(xi_test)))
+         call logger(2, 'Using xi=' // adj(num2str(xi_test)) // ' grid points')
          xi = xi_test
          call get_profile(z_final, xi)
-         call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
+         call logger(2, 'Final volume error (dv): ' // adj(num2str(dv)) // ' m3')
          return
       end if
       x_upp = min(n_pts - doc_index -1, doc_index - 2 - toe_crest_index)
       x_low = - min( toe_crest_index-1, n_pts-doc_index-1)
       if(x_low .gt. x_upp) then
-         call logger(3, 'switching')
+         call logger(4, 'Switching bounds as x_low > x_upp')
          x_tmp = x_low
          x_low = x_upp
          x_upp = x_tmp
       end if
-      write(msg, '(A,I8,A,I8)') 'xupp = ', x_upp, ' xlow = ', x_low
+      write(msg, '(A,I8,A,I8,A)') 'Bounds: x_upp = ', x_upp, ' grid points, x_low = ', x_low, ' grid points'
       call logger(3, adj(msg))
       if (wall%switch.eq.1) x_low = max(x_low, 1 - wall%index)
       allocate(dv_tmp(x_low:x_upp))
@@ -55,60 +55,72 @@ contains
 
       if (xi_est.lt.min(x_low, x_upp).or.xi_est.gt.max(x_upp, x_low)) then
          ! check in case bruun estimate is outside of interval
-         call logger(3, 'Xi_est outside interval')
+         call logger(3, 'Xi_est outside interval bounds, resetting to midpoint')
          xi_est = nint(0.5d0 * (x_upp + x_low))
       end if
       do i=1,max_iter
-         write(msg, '(A,I8)') 'xi_est = ', xi_est
+         write(msg, '(A,I8,A)') 'Iteration ', i, ': xi_est = ', xi_est, ' grid points'
          call logger(4, adj(msg))
          if(xi_est .lt. min(x_low, x_upp) ) then
          xi_est = min(x_low, x_upp) - sign(2, min(x_low, x_upp));
-         write(msg, '(A,I8)') 'new_xi low = ', xi_est
+         write(msg, '(A,I8,A)') 'Adjusted xi_est (lower bound): ', xi_est, ' grid points'
          call logger(4, adj(msg))
          else if(xi_est .ge. max(x_upp,x_low)) then
          xi_est = max(x_low, x_upp) -sign(2, max(x_low, x_upp));
-         write(msg, '(A,I8)') 'new_xi upp = ', xi_est
+         write(msg, '(A,I8,A)') 'Adjusted xi_est (upper bound): ', xi_est, ' grid points'
          call logger(4, adj(msg))
          end if
 
          if (abs(dv_tmp(xi_est) - nanr) > 1.0d-8) then ! we already have a value xi_est
          ! Find the minimum value among already calculated points
          xi_est = minloc(abs(dv_tmp), 1, abs(dv_tmp - nanr) > 1.0d-8) + x_low - 1
+         call logger(4, 'Found existing minimum volume error, exiting iteration')
          exit
          end if
 
          dv_est = evaluate_f(xi_est)
-         if (eql(dv_est,0.d0)) exit
+         if (eql(dv_est,0.d0)) then
+            call logger(4, 'Current volume error is zero, solution found')
+            exit
+         endif
 
          dv_plus = evaluate_f(xi_est +1)
          if (eql(dv_plus,0.d0)) then
-         xi_est = xi_est +1
-         exit
+            xi_est = xi_est +1
+            call logger(4, 'Found zero volume error at xi_est+1, solution found')
+            exit
          end if
 
          dv_minus = evaluate_f(xi_est -1)
          if (eql(dv_minus,0.d0)) then
-         xi_est = xi_est -1
-         exit
+            xi_est = xi_est -1
+            call logger(4, 'Found zero volume error at xi_est-1, solution found')
+            exit
          end if
 
          ! calculate the gradient at this point
          grad_f = (dv_plus - dv_minus) /2.d0
-         write(msg, '(A,E12.5)') 'gradient = ', grad_f
+         write(msg, '(A,E12.5,A)') 'Volume error gradient = ', grad_f, ' m³/grid point'
          call logger(4, adj(msg))
-         if (eql(grad_f,0.d0)) exit
+         if (eql(grad_f,0.d0)) then
+            call logger(4, 'Zero gradient detected, no further improvement possible')
+            exit
+         endif
 
          ! calculate the new estimate
          step = nint(dv_est/grad_f)
-         if (step.eq.0) exit
+         if (step.eq.0) then
+            call logger(4, 'Step size is zero, no further improvement possible')
+            exit
+         endif
          xi_est = xi_est - step
       end do
       xi =xi_est
       call get_profile(z_final, xi_est)
-      write(msg, '(A,F10.4,A,I8,A)') 'Final xi: ', xi*dx, ' m (', xi, ')'
+      write(msg, '(A,F10.4,A,I8,A)') 'Final xi: ', xi*dx, ' m (', xi, ' grid points)'
       call logger(2, adj(msg))
-      call logger(2, 'Final dv (error): ' // adj(num2str(dv)))
-      end subroutine translate_profile
+      call logger(2, 'Final volume error (dv): ' // adj(num2str(dv)) // ' m3')
+   end subroutine translate_profile
 
 
    function evaluate_f(xi_est)
