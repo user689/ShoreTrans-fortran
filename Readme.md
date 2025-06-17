@@ -91,5 +91,9 @@ If you omit the input file, running:
 shoretrans
 ```
 
-will execute the model in the current working directory, expecting the parameter file to be located there. 
+will execute the model in the current working directory, expecting the parameter file to be located there.
+
+## License
+
+This project is available under the [Creative Commons Attribution-NonCommercial 4.0 International License](LICENSE). Feel free to share and adapt the material with proper attribution for non-commercial purposes.
 
